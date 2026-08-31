@@ -1,2 +1,1395 @@
 # mfloreancigh.github.io
-public pages
+<title>Comande di Cucina</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+:root{
+  --bg:#f4f6f3;
+  --surface:#ffffff;
+  --surface-2:#eef1ec;
+  --ink:#1e241f;
+  --ink-soft:#5c6459;
+  --border:#d7ddd3;
+  --chip-bg:#e7ebe3;
+
+  --c-zuppe:#b5541c;
+  --c-primi:#a23327;
+  --c-secondi:#5c3a21;
+  --c-pesce:#235e68;
+  --c-contorni:#4f6b2e;
+  --c-dolci:#7a3350;
+  --c-pane:#a8791a;
+  --c-salse:#4b3b63;
+  --c-antipasti:#2e6b5e;
+  --c-bevande:#33506e;
+  --c-piatti_unici:#8a4b28;
+  --c-default:#4a4a44;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#14170f;
+    --surface:#1c2018;
+    --surface-2:#232920;
+    --ink:#eceee7;
+    --ink-soft:#a9b0a2;
+    --border:#333b2d;
+    --chip-bg:#2a3124;
+
+    --c-zuppe:#d97f3e;
+    --c-primi:#c85a4c;
+    --c-secondi:#a07752;
+    --c-pesce:#4f9aa6;
+    --c-contorni:#7f9c56;
+    --c-dolci:#b06484;
+    --c-pane:#cba043;
+    --c-salse:#8574a8;
+    --c-antipasti:#5b9c8b;
+    --c-bevande:#6a90b8;
+    --c-piatti_unici:#c9855a;
+    --c-default:#9a9a90;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#14170f;
+  --surface:#1c2018;
+  --surface-2:#232920;
+  --ink:#eceee7;
+  --ink-soft:#a9b0a2;
+  --border:#333b2d;
+  --chip-bg:#2a3124;
+
+  --c-zuppe:#d97f3e;
+  --c-primi:#c85a4c;
+  --c-secondi:#a07752;
+  --c-pesce:#4f9aa6;
+  --c-contorni:#7f9c56;
+  --c-dolci:#b06484;
+  --c-pane:#cba043;
+  --c-salse:#8574a8;
+  --c-antipasti:#5b9c8b;
+  --c-bevande:#6a90b8;
+  --c-piatti_unici:#c9855a;
+  --c-default:#9a9a90;
+}
+
+*{box-sizing:border-box;}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:"Work Sans",system-ui,sans-serif;
+}
+
+.topbar{
+  position:sticky; top:0; z-index:10;
+  background:var(--bg);
+  border-bottom:1px solid var(--border);
+  padding:16px 24px 12px;
+}
+.topbar-row{display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:8px 16px;}
+.topbar h1{
+  font-family:"Oswald",sans-serif;
+  font-weight:700;
+  font-size:22px;
+  letter-spacing:0.04em;
+  text-transform:uppercase;
+  margin:0;
+}
+.topbar .count{
+  font-family:"IBM Plex Mono",monospace;
+  font-size:12px;
+  color:var(--ink-soft);
+}
+.controls{display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:10px;}
+.controls input[type="search"]{
+  font-family:"Work Sans",sans-serif;
+  font-size:13px;
+  padding:7px 12px;
+  border:1px solid var(--border);
+  border-radius:5px;
+  background:var(--surface);
+  color:var(--ink);
+  min-width:200px;
+}
+.chip{
+  font-family:"IBM Plex Mono",monospace;
+  font-size:10.5px;
+  letter-spacing:0.03em;
+  text-transform:uppercase;
+  padding:5px 10px;
+  border-radius:4px;
+  background:var(--chip-bg);
+  color:var(--ink-soft);
+  border:1px solid transparent;
+  cursor:pointer;
+  user-select:none;
+  white-space:nowrap;
+}
+.chip:hover{border-color:var(--border);}
+.chip[aria-pressed="true"]{
+  background:var(--ink);
+  color:var(--bg);
+}
+.chip-row{display:flex; flex-wrap:wrap; gap:6px;}
+
+.empty{
+  padding:40px 24px;
+  text-align:center;
+  color:var(--ink-soft);
+  font-size:13px;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));
+  gap:18px;
+  padding:20px 24px 60px;
+  max-width:1500px;
+  margin:0 auto;
+}
+
+.card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:6px;
+  overflow:hidden;
+  break-inside:avoid;
+  display:flex;
+  flex-direction:column;
+}
+.card-head{
+  padding:12px 14px 10px;
+  color:#fff;
+}
+.card-head .name{
+  font-family:"Oswald",sans-serif;
+  font-weight:600;
+  font-size:17px;
+  line-height:1.15;
+  text-transform:uppercase;
+  letter-spacing:0.01em;
+  text-wrap:balance;
+}
+.card-head .meta{
+  font-family:"IBM Plex Mono",monospace;
+  font-size:10px;
+  letter-spacing:0.03em;
+  text-transform:uppercase;
+  opacity:0.92;
+  margin-top:4px;
+  display:flex; gap:8px; flex-wrap:wrap;
+}
+.card-body{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  flex:1;
+}
+.field{
+  padding:10px 12px;
+  border-top:1px solid var(--border);
+  border-left:1px solid var(--border);
+}
+.field:nth-child(1),.field:nth-child(2){border-top:none;}
+.field:nth-child(odd){border-left:none;}
+.field .label{
+  font-family:"IBM Plex Mono",monospace;
+  font-size:9.5px;
+  letter-spacing:0.06em;
+  color:var(--ink-soft);
+  text-transform:uppercase;
+  margin-bottom:4px;
+}
+.field .value{
+  font-size:12.5px;
+  line-height:1.42;
+}
+.field .value .none{color:var(--ink-soft); font-style:italic;}
+
+@media print{
+  .topbar, .empty{display:none;}
+  .grid{grid-template-columns:1fr 1fr; gap:10px; padding:0;}
+  body{background:#fff;}
+  .card{border:1px solid #999; break-inside:avoid;}
+}
+</style>
+
+<div class="topbar">
+  <div class="topbar-row">
+    <h1>Comande di Cucina</h1>
+    <span class="count" id="count"></span>
+  </div>
+  <div class="controls">
+    <input type="search" id="search" placeholder="Cerca per nome…">
+  </div>
+  <div class="controls chip-row" id="chips"></div>
+</div>
+
+<div class="grid" id="grid"></div>
+<div class="empty" id="empty" hidden>Nessuna ricetta trovata.</div>
+
+<script>
+const RECIPES = [
+// === ZUPPE ===
+{ name:"Zuppa Agropiccante", cat:"zuppe", catLabel:"Zuppe", porzioni:"2", tempo:"—",
+  fields:[
+    {label:"Aromi di base", value:"Peperoncino fresco tritato, cipollotto"},
+    {label:"Ingredienti", value:"Pollo sfilacciato, funghi shiitake e champignon, tofu morbido, carota a listarelle"},
+    {label:"Brodo", value:"Acqua, salsa di soia scura, aceto di riso, fecola per addensare"},
+    {label:"Guarnizione", value:"Cipollotto fresco, olio di sesamo, tuorlo"},
+  ]},
+{ name:"Vellutata di Asparagi e Patate con Crostini", cat:"zuppe", catLabel:"Zuppe", porzioni:"4", tempo:"1h",
+  fields:[
+    {label:"Aromi di base", value:"Scalogno rosolato in olio e burro"},
+    {label:"Ingredienti", value:"Asparagi, patate a cubetti"},
+    {label:"Brodo", value:"Vino bianco sfumato, brodo vegetale, panna fresca"},
+    {label:"Guarnizione", value:"Punte di asparagi sbollentate, erba cipollina, crostini di pancarrè fritti"},
+  ]},
+{ name:"Vellutata di Cipolle", cat:"zuppe", catLabel:"Zuppe", porzioni:"2", tempo:"—",
+  fields:[
+    {label:"Aromi di base", value:"Cipolle stufate in olio, 20 min a fuoco basso"},
+    {label:"Ingredienti", value:"Fecola per addensare"},
+    {label:"Brodo", value:"Acqua"},
+    {label:"Guarnizione", value:"Filo d'olio, parmigiano grattugiato, pepe"},
+  ]},
+{ name:"Zuppa di Cipolle", cat:"zuppe", catLabel:"Zuppe", porzioni:"—", tempo:"—",
+  fields:[
+    {label:"Aromi di base", value:"Cipolle dorate rosolate nel burro con alloro"},
+    {label:"Ingredienti", value:"Farina per legare"},
+    {label:"Brodo", value:"Brodo vegetale"},
+    {label:"Guarnizione", value:"Pane e emmental gratinati in forno sulla cocotte"},
+  ]},
+{ name:"Zuppa di Funghi e Patate", cat:"zuppe", catLabel:"Zuppe", porzioni:"4", tempo:"—",
+  fields:[
+    {label:"Aromi di base", value:"Scalogno appassito in olio a fuoco basso"},
+    {label:"Ingredienti", value:"Funghi a pezzetti, patate a fette sottili"},
+    {label:"Brodo", value:"Brodo caldo"},
+    {label:"Guarnizione", value:"Prezzemolo tritato"},
+  ]},
+{ name:"Zuppa di Miso", cat:"zuppe", catLabel:"Zuppe", porzioni:"2", tempo:"—",
+  fields:[
+    {label:"Aromi di base", value:"Alga konbu in infusione, erba cipollina"},
+    {label:"Ingredienti", value:"—"},
+    {label:"Brodo", value:"Acqua con konbu, miso sciolto a fuoco spento"},
+    {label:"Guarnizione", value:"Erba cipollina tritata"},
+  ]},
+{ name:"Crema di Zucca con Caprino", cat:"zuppe", catLabel:"Zuppe", porzioni:"5", tempo:"—",
+  fields:[
+    {label:"Aromi di base", value:"Soffritto di aglio, zenzero, finocchio, cipolla, carota"},
+    {label:"Ingredienti", value:"Zucca delica, patate"},
+    {label:"Brodo", value:"Brodo, a copertura in cottura"},
+    {label:"Guarnizione", value:"Caprino aromatizzato (olio, timo, scorza di limone), cavolo nero saltato, peperoncino"},
+  ]},
+{ name:"Minestrone di Verdure Low-Carb", cat:"zuppe", catLabel:"Zuppe", porzioni:"—", tempo:"—",
+  fields:[
+    {label:"Aromi di base", value:"Cipolla e aglio soffritti in olio"},
+    {label:"Ingredienti", value:"Carote, sedano, zucchina, fagioli, pomodori a cubetti"},
+    {label:"Brodo", value:"Brodo di verdure, concentrato di pomodoro, timo/basilico/origano secchi"},
+    {label:"Guarnizione", value:"—"},
+  ]},
+{ name:"Zuppa Piccante di Frutti di Mare", cat:"zuppe", catLabel:"Zuppe", porzioni:"2", tempo:"—",
+  fields:[
+    {label:"Aromi di base", value:"Dashi come base aromatica"},
+    {label:"Ingredienti", value:"Gamberoni, anguilla, vongole e cozze giganti, calamari, branzino, pannocchia, bok choy"},
+    {label:"Brodo", value:"Dashi, salsa di soia leggera, sakè, salsa chili all'aglio"},
+    {label:"Guarnizione", value:"Coriandolo fresco"},
+  ]},
+{ name:"Ramen al Salmone", cat:"zuppe", catLabel:"Zuppe", porzioni:"2", tempo:"—",
+  fields:[
+    {label:"Aromi di base", value:"Kombu in infusione fredda 30 min"},
+    {label:"Ingredienti", value:"Salmone scottato, tagliolini freschi, porro, germogli di radicchio rosso"},
+    {label:"Brodo", value:"Fumetto di pesce, dashi, mirin, salsa di soia"},
+    {label:"Guarnizione", value:"Germogli di radicchio, uovo semi-sodo marinato"},
+  ]},
+{ name:"Zuppa di Pesce", cat:"zuppe", catLabel:"Zuppe", porzioni:"4", tempo:"1h",
+  fields:[
+    {label:"Aromi di base", value:"Soffritto di cipolla, aglio, carota, sedano con semi di finocchio, cumino, peperoncino"},
+    {label:"Ingredienti", value:"Pesce da brodo o scarti di tonno, pasta all'uovo"},
+    {label:"Brodo", value:"Acqua, concentrato di pomodoro, brodo di pesce filtrato"},
+    {label:"Guarnizione", value:"Prezzemolo tritato"},
+  ]},
+{ name:"Zuppa di Fagioli Piccante", cat:"zuppe", catLabel:"Zuppe", porzioni:"—", tempo:"—",
+  fields:[
+    {label:"Aromi di base", value:"Aglio, cipollotti, peperoncino rosolati in olio"},
+    {label:"Ingredienti", value:"Fagioli in scatola, passata di pomodoro"},
+    {label:"Brodo", value:"Birra, salsa worcestershire, salsa di soia"},
+    {label:"Guarnizione", value:"—"},
+  ]},
+{ name:"Ramen Vegetariano Autunnale", cat:"zuppe", catLabel:"Zuppe", porzioni:"—", tempo:"—",
+  fields:[
+    {label:"Aromi di base", value:"Miso sciolto nel brodo, cavolo nero e funghi saltati"},
+    {label:"Ingredienti", value:"Udon o noodles"},
+    {label:"Brodo", value:"Brodo di verdure"},
+    {label:"Guarnizione", value:"Kimchi"},
+  ]},
+
+// === PRIMI ===
+{ name:"Risotto Zafferano, Taleggio e Salsiccia", cat:"primi", catLabel:"Primi", porzioni:"4", tempo:"—",
+  fields:[
+    {label:"Soffritto", value:"Cipolla tritata; salsiccia rosolata a parte e tenuta da parte"},
+    {label:"Ingredienti", value:"Riso, taleggio a pezzi, zafferano"},
+    {label:"Cottura", value:"Tostatura, sfumato con vino bianco, portato a cottura con brodo vegetale"},
+    {label:"Mantecatura", value:"Burro freddo, parmigiano, taleggio e salsiccia a fine cottura"},
+  ]},
+{ name:"Pasta con Sugo Cremoso alla Feta", cat:"primi", catLabel:"Primi", porzioni:"—", tempo:"30 min forno",
+  fields:[
+    {label:"Soffritto (in forno)", value:"Aglio in testa, scalogno, rosmarino, timo"},
+    {label:"Ingredienti", value:"Pomodorini, feta, olive, pasta"},
+    {label:"Cottura", value:"Forno 180° 20-30 min, poi frullato in crema; pasta lessata a parte"},
+    {label:"Mantecatura", value:"Timo fresco, pepe"},
+  ]},
+{ name:"Spaghetti con Crema di Cavolfiore e Panure Croccante", cat:"primi", catLabel:"Primi", porzioni:"2", tempo:"—",
+  fields:[
+    {label:"Soffritto", value:"Aglio e peperoncino secco in olio"},
+    {label:"Ingredienti", value:"Cavolfiore, spaghetti integrali"},
+    {label:"Cottura", value:"Cavolfiore saltato, poi cotto nell'acqua di cottura della pasta e frullato"},
+    {label:"Mantecatura", value:"Panure di pangrattato e pomodoro secco, scorza di limone, timo"},
+  ]},
+{ name:"Pasta alla Zozzona", cat:"primi", catLabel:"Primi", porzioni:"4", tempo:"—",
+  fields:[
+    {label:"Soffritto", value:"Cipolla, guanciale e salsiccia rosolati"},
+    {label:"Ingredienti", value:"Rigatoni, passata di pomodoro"},
+    {label:"Cottura", value:"Sugo di pomodoro con la carne; pasta risottata in padella con acqua di cottura"},
+    {label:"Mantecatura", value:"Crema di uovo, tuorli e pecorino, a fuoco spento"},
+  ]},
+{ name:"Lasagne Vegetariane", cat:"primi", catLabel:"Primi", porzioni:"—", tempo:"1h",
+  fields:[
+    {label:"Soffritto", value:"Porro stufato in olio"},
+    {label:"Ingredienti", value:"Zucchine, cavolfiore, carote, pomodorini, besciamella"},
+    {label:"Cottura", value:"Verdure frullate; strati in teglia, forno 180°C 20-25 min"},
+    {label:"Guarnizione", value:"Pomodorini freschi, filo d'olio, prezzemolo"},
+  ]},
+{ name:"Pasta Gratinata alle Noci", cat:"primi", catLabel:"Primi", porzioni:"—", tempo:"45 min",
+  fields:[
+    {label:"Soffritto", value:"—"},
+    {label:"Ingredienti", value:"Pasta corta, noci pestate, besciamella"},
+    {label:"Cottura", value:"A strati in teglia imburrata, forno 180°C 10 min"},
+    {label:"Mantecatura", value:"Parmigiano grattugiato in superficie"},
+  ]},
+{ name:"Pennette Incazzate", cat:"primi", catLabel:"Primi", porzioni:"2", tempo:"15 min",
+  fields:[
+    {label:"Soffritto", value:"Aglio intero e peperoncino in olio"},
+    {label:"Ingredienti", value:"Pomodorini ciliegia, pennette"},
+    {label:"Cottura", value:"Sughetto 10 min; pasta saltata con acqua di cottura"},
+    {label:"Guarnizione", value:"Origano"},
+  ]},
+{ name:"Pesto di Zucchine", cat:"primi", catLabel:"Primi", porzioni:"—", tempo:"—",
+  fields:[
+    {label:"Soffritto", value:"Aglio intero in olio"},
+    {label:"Ingredienti", value:"Zucchine saltate, pinoli, nocciole tostate, feta, basilico"},
+    {label:"Cottura", value:"Zucchine saltate, poi frullate a crudo con gli altri ingredienti"},
+    {label:"Mantecatura", value:"Olio a filo per la cremosità"},
+  ]},
+{ name:"Ragù con Costine", cat:"primi", catLabel:"Primi", porzioni:"—", tempo:"4h",
+  fields:[
+    {label:"Soffritto", value:"Sedano, carota, porro, aglio in burro"},
+    {label:"Ingredienti", value:"Macinato misto, costine di maiale"},
+    {label:"Cottura", value:"Sfumato al vino, passata e acqua, cottura lenta ~3h a fuoco medio-alto"},
+    {label:"Mantecatura", value:"Goccio di latte a fine cottura"},
+  ]},
+{ name:"Ravioli al Vapore", cat:"primi", catLabel:"Primi", porzioni:"3", tempo:"prep 30 min · cottura 50 min",
+  fields:[
+    {label:"Impasto", value:"Farina, acqua, sale"},
+    {label:"Ripieno", value:"Maiale macinato, carota, porro, verza, zenzero, salsa di soia"},
+    {label:"Cottura", value:"Ripieno rosolato in wok; ravioli chiusi a mano, a vapore 15 min"},
+    {label:"Guarnizione", value:"—"},
+  ]},
+{ name:"Risotto agli Asparagi", cat:"primi", catLabel:"Primi", porzioni:"—", tempo:"45 min",
+  fields:[
+    {label:"Soffritto", value:"Scalogno tritato rosolato con un po' di brodo"},
+    {label:"Ingredienti", value:"Riso, asparagi (punte tenute da parte)"},
+    {label:"Cottura", value:"Risotto classico con brodo vegetale"},
+    {label:"Mantecatura", value:"Punte di asparagi rimesse a fine cottura, parmigiano"},
+  ]},
+{ name:"Risotto al Radicchio Rosso", cat:"primi", catLabel:"Primi", porzioni:"—", tempo:"45 min",
+  fields:[
+    {label:"Soffritto", value:"Scalogno rosolato in olio"},
+    {label:"Ingredienti", value:"Riso, radicchio rosso tritato"},
+    {label:"Cottura", value:"Sfumato con vino bianco, cottura classica con brodo"},
+    {label:"Mantecatura", value:"Parmigiano, pepe nero"},
+  ]},
+{ name:"Risotto Zafferano e Funghi", cat:"primi", catLabel:"Primi", porzioni:"2", tempo:"—",
+  fields:[
+    {label:"Soffritto", value:"Aglio in olio; cipolla per il risotto"},
+    {label:"Ingredienti", value:"Riso arborio, funghi trifolati con prezzemolo, zafferano"},
+    {label:"Cottura", value:"Funghi trifolati a parte; risotto sfumato con vino bianco e brodo"},
+    {label:"Mantecatura", value:"Burro e grana"},
+  ]},
+{ name:"Spaghetti Aglio, Olio e Peperoncino alla Sicula", cat:"primi", catLabel:"Primi", porzioni:"—", tempo:"30 min",
+  fields:[
+    {label:"Soffritto", value:"Trito di aglio, prezzemolo e peperoncino in olio"},
+    {label:"Ingredienti", value:"Spaghetti"},
+    {label:"Cottura", value:"Pasta saltata a fiamma vivace con il condimento"},
+    {label:"Guarnizione", value:"—"},
+  ]},
+{ name:"Spaghetti al Rosmarino", cat:"primi", catLabel:"Primi", porzioni:"2", tempo:"—",
+  fields:[
+    {label:"Soffritto", value:"Rosmarino tritato, aglio e peperoncino in olio"},
+    {label:"Ingredienti", value:"Spaghetti, pomodori pelati"},
+    {label:"Cottura", value:"Sugo 20 min; pasta saltata a fiamma vivace"},
+    {label:"Guarnizione", value:"—"},
+  ]},
+{ name:"Spaghetti alla Salsiccia", cat:"primi", catLabel:"Primi", porzioni:"2", tempo:"—",
+  fields:[
+    {label:"Soffritto", value:"Salsiccia rosolata, sfumata al vino"},
+    {label:"Ingredienti", value:"Spaghetti, pomodori San Marzano, passata"},
+    {label:"Cottura", value:"Sugo cotto; pasta saltata con acqua di cottura"},
+    {label:"Mantecatura", value:"Burro, pecorino e parmigiano"},
+  ]},
+{ name:"Sugo di Fegato", cat:"primi", catLabel:"Primi", porzioni:"2", tempo:"—",
+  fields:[
+    {label:"Soffritto", value:"Rosmarino e salvia in burro e olio"},
+    {label:"Ingredienti", value:"Fegato sminuzzato"},
+    {label:"Cottura", value:"Rosolato, sfumato con vino rosso fino a completa evaporazione"},
+    {label:"Mantecatura", value:"Olio a crudo, abbondante parmigiano"},
+  ]},
+{ name:"Tagliatelle ai Quattro Formaggi", cat:"primi", catLabel:"Primi", porzioni:"2", tempo:"—",
+  fields:[
+    {label:"Soffritto", value:"—"},
+    {label:"Ingredienti", value:"Tagliatelle, parmigiano, taleggio, gorgonzola, emmenthal"},
+    {label:"Cottura", value:"Formaggi sciolti in latte e panna; pasta gratinata in forno 5 min"},
+    {label:"Mantecatura", value:"Parmigiano in superficie"},
+  ]},
+{ name:"Tagliatelle con Funghi", cat:"primi", catLabel:"Primi", porzioni:"2", tempo:"—",
+  fields:[
+    {label:"Soffritto", value:"Cipolla e aglio in burro"},
+    {label:"Ingredienti", value:"Tagliatelle, funghi porcini a fettine"},
+    {label:"Cottura", value:"~30 min con dado sciolto in acqua calda"},
+    {label:"Guarnizione", value:"Prezzemolo fresco tritato"},
+  ]},
+{ name:"Spaghetti con Cavolo Nero e Burrata", cat:"primi", catLabel:"Primi", porzioni:"—", tempo:"—",
+  fields:[
+    {label:"Soffritto", value:"Acciuga sott'olio, peperoncino e aglio in olio"},
+    {label:"Ingredienti", value:"Cavolo nero (crema e chips), spaghetti"},
+    {label:"Cottura", value:"Crema di cavolo saltata col soffritto; chips in forno 200°C 10 min; pasta cotta nell'acqua del cavolo"},
+    {label:"Guarnizione", value:"Burrata condita con olio, scorza di limone e menta"},
+  ]},
+{ name:"Spaghetti con Patè di Olive", cat:"primi", catLabel:"Primi", porzioni:"—", tempo:"—",
+  fields:[
+    {label:"Soffritto", value:"Aglio e scalogno in olio"},
+    {label:"Ingredienti", value:"Pomodorini, patè di olive, formaggio spalmabile"},
+    {label:"Cottura", value:"Sugo 10 min, allungato con acqua di cottura della pasta"},
+    {label:"Guarnizione", value:"—"},
+  ]},
+{ name:"Risotto Cavolo Cappuccio e Caprino allo Zafferano", cat:"primi", catLabel:"Primi", porzioni:"2", tempo:"—",
+  fields:[
+    {label:"Soffritto", value:"Cipolla rossa nel burro"},
+    {label:"Ingredienti", value:"Riso carnaroli, brodo di cavolo cappuccio e arancia fatto in casa"},
+    {label:"Cottura", value:"Sfumato con vino bianco, cotto con il brodo aromatico"},
+    {label:"Mantecatura", value:"Crema di caprino e zafferano, grana e burro"},
+  ]},
+
+// === ZUPPE (aggiunte da gruppo pesce) ===
+{ name:"Zuppa Delicata di Pesce e Patate", cat:"zuppe", catLabel:"Zuppe", porzioni:"4", tempo:"40 min",
+  fields:[
+    {label:"Aromi di base", value:"Patate soffritte in olio"},
+    {label:"Ingredienti", value:"Merluzzo a listarelle, patate"},
+    {label:"Brodo", value:"Brodo con dado vegetale; patate frullate per dare cremosità"},
+    {label:"Guarnizione", value:"Prezzemolo fresco, pepe"},
+  ]},
+
+// === PRIMI (aggiunte da gruppo pesce/secondi) ===
+{ name:"Spaghetti alla Carbonara", cat:"primi", catLabel:"Primi", porzioni:"4", tempo:"25 min",
+  fields:[
+    {label:"Soffritto", value:"Guanciale rosolato; pepe nero tostato a parte"},
+    {label:"Ingredienti", value:"Spaghetti, tuorli, pecorino romano"},
+    {label:"Cottura", value:"Guanciale rosolato in padella; pasta scolata al dente"},
+    {label:"Mantecatura", value:"Crema di tuorli e pecorino, mantecata fuori dal fuoco con acqua di cottura"},
+  ]},
+{ name:"Linguine con Scampi al Limone", cat:"primi", catLabel:"Primi", porzioni:"4", tempo:"—",
+  fields:[
+    {label:"Soffritto", value:"Aglio e peperoncino essiccato in olio, scalogno"},
+    {label:"Ingredienti", value:"Gamberi o mazzancolle, pomodorini datterini, tagliolini"},
+    {label:"Cottura", value:"Fumetto coi gusci dei gamberi; sfumato con vino bianco, succo e scorza di limone, burro"},
+    {label:"Mantecatura", value:"Prezzemolo, filo d'olio a crudo, fettina di limone"},
+  ]},
+{ name:"Pesto di Acciughe", cat:"primi", catLabel:"Primi", porzioni:"2", tempo:"—",
+  fields:[
+    {label:"Soffritto", value:"Aglio pestato al mortaio con sale grosso"},
+    {label:"Ingredienti", value:"Acciughe sott'olio, pinoli, prezzemolo, peperoncino"},
+    {label:"Cottura", value:"Pestato al mortaio, poi scaldato in padella con concentrato di pomodoro, 5 min"},
+    {label:"Mantecatura", value:"Olio a crudo"},
+  ]},
+{ name:"Spaghetti con Tonno", cat:"primi", catLabel:"Primi", porzioni:"2", tempo:"—",
+  fields:[
+    {label:"Soffritto", value:"Cipolla e aglio con peperoncino essiccato in olio"},
+    {label:"Ingredienti", value:"Passata di pomodoro, tonno sott'olio, spaghetti"},
+    {label:"Cottura", value:"Sugo 15 min; tonno unito a fuoco spento"},
+    {label:"Guarnizione", value:"—"},
+  ]},
+{ name:"Tagliolini con Sugo di Canocchie", cat:"primi", catLabel:"Primi", porzioni:"4", tempo:"30 min",
+  fields:[
+    {label:"Soffritto", value:"Scalogno e peperoncino fresco in olio"},
+    {label:"Ingredienti", value:"Canocchie, passata di pomodoro, tagliolini"},
+    {label:"Cottura", value:"Sfumato al vino bianco; passata e latte per addensare il sugo"},
+    {label:"Mantecatura", value:"Prezzemolo, una canocchia intera a testa"},
+  ]},
+
+// === SECONDI ===
+{ name:"Pollo Kung Pao", cat:"secondi", catLabel:"Secondi", porzioni:"—", tempo:"—",
+  fields:[
+    {label:"Base/marinatura", value:"Pollo marinato con soia, vino di riso, bicarbonato e amido di mais, 1h"},
+    {label:"Ingrediente principale", value:"Petto di pollo, peperone, cipolla"},
+    {label:"Cottura", value:"Pollo scottato a fiamma alta; verdure saltate con aglio e zenzero; salsa (soia, vino di riso, hoisin, aceto nero) unita in padella"},
+    {label:"Guarnizione", value:"Anacardi, olio di sesamo, chili crisps"},
+  ]},
+{ name:"Pollo Marinato alla Soia e Cipollotto", cat:"secondi", catLabel:"Secondi", porzioni:"—", tempo:"—",
+  fields:[
+    {label:"Base/marinatura", value:"Soia, salsa di ostriche, miele e spezie, 30 min"},
+    {label:"Ingrediente principale", value:"Straccetti di pollo, cipollotto"},
+    {label:"Cottura", value:"Saltato in padella con aglio, peperoncino e olio di sesamo"},
+    {label:"Guarnizione", value:"Cipollotto verde; servito con riso al vapore"},
+  ]},
+{ name:"Arrosto di Maiale alle Erbe", cat:"secondi", catLabel:"Secondi", porzioni:"4", tempo:"~2h forno",
+  fields:[
+    {label:"Base/marinatura", value:"Sale, pepe, rosmarino sulla cotenna incisa"},
+    {label:"Ingrediente principale", value:"Lonza di maiale con cotenna"},
+    {label:"Cottura", value:"Forno 190°C ~2h (25 min/450g), poi 230°C 10 min per la cotenna"},
+    {label:"Guarnizione", value:"Salsa di mele (mele, zucchero)"},
+  ]},
+{ name:"Carne Macinata al Miso", cat:"secondi", catLabel:"Secondi", porzioni:"6", tempo:"—",
+  fields:[
+    {label:"Base/marinatura", value:"—"},
+    {label:"Ingrediente principale", value:"Macinato di maiale"},
+    {label:"Cottura", value:"Rosolato con zenzero e vino; miso, zucchero, soia e salsa piccante aggiunti e ridotti con acqua"},
+    {label:"Guarnizione", value:"Filo di olio di sesamo"},
+  ]},
+{ name:"Costine alla Senape", cat:"secondi", catLabel:"Secondi", porzioni:"—", tempo:"2h riposo + 2h forno",
+  fields:[
+    {label:"Base/marinatura", value:"Senape, paprika, cumino, zucchero di canna, peperoncino, aglio — 2h in frigo"},
+    {label:"Ingrediente principale", value:"Costine di maiale intere"},
+    {label:"Cottura", value:"Forno 200°C 30 min scoperte, poi 90 min coperte"},
+    {label:"Guarnizione", value:"—"},
+  ]},
+{ name:"Costine con Salsa Barbecue", cat:"secondi", catLabel:"Secondi", porzioni:"6", tempo:"2h riposo + 35 min forno",
+  fields:[
+    {label:"Base/marinatura", value:"Zucchero di canna, peperoncino, paprika, senape, cumino, sale — 2h"},
+    {label:"Ingrediente principale", value:"Costine"},
+    {label:"Cottura", value:"Forno 200°C 30 min"},
+    {label:"Guarnizione", value:"Salsa barbecue, altri 5 min in forno per glassare"},
+  ]},
+{ name:"Filetto ai 4 Pepi", cat:"secondi", catLabel:"Secondi", porzioni:"4", tempo:"—",
+  fields:[
+    {label:"Base/marinatura", value:"Aglio strofinato, macerazione 30 min nel brandy"},
+    {label:"Ingrediente principale", value:"Filetto di maiale, mix di 4 pepi"},
+    {label:"Cottura", value:"Rosolato nel burro, sfumato e flambato al brandy con salvia"},
+    {label:"Guarnizione", value:"Fondo di cottura"},
+  ]},
+{ name:"Involtini di Cavolo", cat:"secondi", catLabel:"Secondi", porzioni:"10", tempo:"—",
+  fields:[
+    {label:"Base/marinatura", value:"—"},
+    {label:"Ingrediente principale", value:"Foglie di verza, ripieno di macinato misto, zucchina, mollica di pane"},
+    {label:"Cottura", value:"Ripieno rosolato in padella; involtini chiusi e cotti in padella con burro e dado, 15 min"},
+    {label:"Guarnizione", value:"—"},
+  ]},
+{ name:"Involtini di Pollo in Friggitrice ad Aria", cat:"secondi", catLabel:"Secondi", porzioni:"—", tempo:"20 min",
+  fields:[
+    {label:"Base/marinatura", value:"—"},
+    {label:"Ingrediente principale", value:"Petto di pollo, prosciutto cotto, formaggio"},
+    {label:"Cottura", value:"Impanati e cotti in friggitrice ad aria 180°C, 20 min"},
+    {label:"Guarnizione", value:"—"},
+  ]},
+{ name:"Maiale al Vapore con Salsa alla Senape", cat:"secondi", catLabel:"Secondi", porzioni:"4", tempo:"~1h",
+  fields:[
+    {label:"Base/marinatura", value:"—"},
+    {label:"Ingrediente principale", value:"Lonza di maiale, cipolle a fette"},
+    {label:"Cottura", value:"A vapore con le cipolle, ~1h"},
+    {label:"Guarnizione", value:"Salsa alla senape (tuorli, olio, aceto, zucchero)"},
+  ]},
+{ name:"Polpette alla Mortadella", cat:"secondi", catLabel:"Secondi", porzioni:"2", tempo:"—",
+  fields:[
+    {label:"Base/marinatura", value:"—"},
+    {label:"Ingrediente principale", value:"Mortadella, pangrattato, parmigiano, uovo"},
+    {label:"Cottura", value:"Infarinate e rosolate in padella con burro, aglio e dado"},
+    {label:"Guarnizione", value:"—"},
+  ]},
+{ name:"Polpette di Ceci", cat:"secondi", catLabel:"Secondi", porzioni:"2", tempo:"—",
+  fields:[
+    {label:"Base/marinatura", value:"—"},
+    {label:"Ingrediente principale", value:"Ceci schiacciati, cipolla, prezzemolo, salvia"},
+    {label:"Cottura", value:"Infarinate e fritte in olio bollente"},
+    {label:"Guarnizione", value:"Scorza e succo di limone"},
+  ]},
+{ name:"Polpette di Tacchino con Zucchine", cat:"secondi", catLabel:"Secondi", porzioni:"—", tempo:"10-15 min",
+  fields:[
+    {label:"Base/marinatura", value:"—"},
+    {label:"Ingrediente principale", value:"Tacchino macinato, zucchine grattugiate, erbe aromatiche"},
+    {label:"Cottura", value:"Rosolate in padella a fuoco medio, 10-15 min"},
+    {label:"Guarnizione", value:"Insalata o verdure grigliate"},
+  ]},
+{ name:"Rotoli di Prosciutto Filanti", cat:"secondi", catLabel:"Secondi", porzioni:"—", tempo:"20 min forno",
+  fields:[
+    {label:"Base/marinatura", value:"—"},
+    {label:"Ingrediente principale", value:"Prosciutto cotto, purè di patate, mozzarella"},
+    {label:"Cottura", value:"Arrotolati, panati e cotti in forno 200°C 20 min"},
+    {label:"Guarnizione", value:"—"},
+  ]},
+{ name:"Bocconcini di Pollo alla Paprika", cat:"secondi", catLabel:"Secondi", porzioni:"4", tempo:"5 min frittura",
+  fields:[
+    {label:"Base/marinatura", value:"Farina, zucchero a velo, sale, pepe, paprika"},
+    {label:"Ingrediente principale", value:"Petto di pollo a bocconcini"},
+    {label:"Cottura", value:"Fritti in olio a 190°C per 5 min"},
+    {label:"Guarnizione", value:"—"},
+  ]},
+{ name:"Involtini di Pollo e Prosciutto Crudo", cat:"secondi", catLabel:"Secondi", porzioni:"2", tempo:"20 min",
+  fields:[
+    {label:"Base/marinatura", value:"—"},
+    {label:"Ingrediente principale", value:"Petto di pollo battuto, prosciutto crudo, rosmarino"},
+    {label:"Cottura", value:"Arrotolati e cotti in padella antiaderente, 20 min"},
+    {label:"Guarnizione", value:"Noce moscata"},
+  ]},
+{ name:"Petto d'Anatra Marinato", cat:"secondi", catLabel:"Secondi", porzioni:"2", tempo:"1h marinatura",
+  fields:[
+    {label:"Base/marinatura", value:"Birra, erbe aromatiche, bacche di ginepro, chiodi di garofano — 1h"},
+    {label:"Ingrediente principale", value:"Petto d'anatra, cipollotti"},
+    {label:"Cottura", value:"Rosolato in padella, poi forno a bassa temperatura fino a 60-70°C al cuore"},
+    {label:"Guarnizione", value:"Cipollotti, noci tritate, riduzione di aceto balsamico"},
+  ]},
+{ name:"Pollo al Forno", cat:"secondi", catLabel:"Secondi", porzioni:"—", tempo:"~1h forno",
+  fields:[
+    {label:"Base/marinatura", value:"Trito di sale grosso, rosmarino, origano, aglio, alloro, salvia"},
+    {label:"Ingrediente principale", value:"Pollo intero, patate"},
+    {label:"Cottura", value:"Forno 200°C fino a 85°C al cuore, bagnato periodicamente con i succhi di cottura"},
+    {label:"Guarnizione", value:"—"},
+  ]},
+{ name:"Pollo Speziato al Forno", cat:"secondi", catLabel:"Secondi", porzioni:"2", tempo:"3h marinatura + 1h forno",
+  fields:[
+    {label:"Base/marinatura", value:"Latte, aceto, cipolla, aglio, peperoncino, alloro, curcuma, cumino, coriandolo, curry — 3h"},
+    {label:"Ingrediente principale", value:"Pollo"},
+    {label:"Cottura", value:"Forno 180°C 1h, girato a metà e irrorato con burro fuso"},
+    {label:"Guarnizione", value:"—"},
+  ]},
+{ name:"Polpette di Riso", cat:"secondi", catLabel:"Secondi", porzioni:"—", tempo:"—",
+  fields:[
+    {label:"Base/marinatura", value:"—"},
+    {label:"Ingrediente principale", value:"Riso per sushi condito, zafferano, formaggi"},
+    {label:"Cottura", value:"Impanate e fritte"},
+    {label:"Guarnizione", value:"—"},
+  ]},
+{ name:"Tomino alla Milanese", cat:"secondi", catLabel:"Secondi", porzioni:"—", tempo:"—",
+  fields:[
+    {label:"Base/marinatura", value:"—"},
+    {label:"Ingrediente principale", value:"Tomini"},
+    {label:"Cottura", value:"Passati in uovo e pangrattato, fritti in olio bollente"},
+    {label:"Guarnizione", value:"—"},
+  ]},
+
+// === PESCE / ANTIPASTI DI PESCE ===
+{ name:"Antipasto Impilato", cat:"pesce", catLabel:"Pesce / Antipasti", porzioni:"2", tempo:"—",
+  fields:[
+    {label:"Base", value:"Cetriolo a dadini, formaggio spalmabile"},
+    {label:"Ingrediente principale", value:"Salmone scottato in padella"},
+    {label:"Preparazione", value:"Assemblato a strati in coppapasta, rassodato in frigo"},
+    {label:"Guarnizione", value:"Erba cipollina tritata"},
+  ]},
+{ name:"Tartare di Salmone con Avocado", cat:"pesce", catLabel:"Pesce / Antipasti", porzioni:"2", tempo:"—",
+  fields:[
+    {label:"Base", value:"Cipollotto a rondelle, avocado a cubetti"},
+    {label:"Ingrediente principale", value:"Salmone o tonno a cubetti"},
+    {label:"Preparazione", value:"Marinato in crema di maionese, philadelphia, pasta di peperoncino allo yuzu, soia e aceto di riso"},
+    {label:"Guarnizione", value:"Filo di olio di sesamo"},
+  ]},
+{ name:"Vol au Vent al Salmone", cat:"pesce", catLabel:"Pesce / Antipasti", porzioni:"—", tempo:"20 min forno",
+  fields:[
+    {label:"Base", value:"Dischetti di pasta sfoglia impilati e cotti in forno 180°C 20 min"},
+    {label:"Ingrediente principale", value:"Salmone affumicato"},
+    {label:"Preparazione", value:"Farcia frullata di salmone, formaggio spalmabile, maionese e pepe bianco"},
+    {label:"Guarnizione", value:"Scorza di limone, erba cipollina"},
+  ]},
+{ name:"Salmone e Maionese Piccante", cat:"pesce", catLabel:"Pesce / Antipasti", porzioni:"—", tempo:"—",
+  fields:[
+    {label:"Base", value:"Maionese fatta in casa (tuorlo, senape, peperoncino)"},
+    {label:"Ingrediente principale", value:"Salmone affumicato a pezzetti"},
+    {label:"Preparazione", value:"Mescolato con la maionese e limone"},
+    {label:"Guarnizione", value:"Sesame furikake"},
+  ]},
+{ name:"Sauté di Gamberoni all'Aglio", cat:"pesce", catLabel:"Pesce / Antipasti", porzioni:"2", tempo:"—",
+  fields:[
+    {label:"Base", value:"Aglio grattugiato scaldato in olio"},
+    {label:"Ingrediente principale", value:"Gamberoni con guscio, tagliati a metà"},
+    {label:"Preparazione", value:"Saltati a fiamma alta con il carapace verso il basso"},
+    {label:"Guarnizione", value:"Sakè a fine cottura, erba cipollina tritata"},
+  ]},
+{ name:"Tonno Tataki", cat:"pesce", catLabel:"Pesce / Antipasti", porzioni:"2", tempo:"15 min marinatura",
+  fields:[
+    {label:"Base", value:"Marinatura di soia, zenzero, aglio, zucchero, aceto di riso — 15 min"},
+    {label:"Ingrediente principale", value:"Tranci di tonno"},
+    {label:"Preparazione", value:"Spennellato di senape, in crosta di sesamo tostato, scottato pochi secondi per lato"},
+    {label:"Guarnizione", value:"Cipollotto o erba cipollina, salsa unagi"},
+  ]},
+{ name:"Onigiri con Mousse di Tonno", cat:"pesce", catLabel:"Pesce / Antipasti", porzioni:"4", tempo:"1h",
+  fields:[
+    {label:"Base", value:"Riso per sushi condito con aceto di riso"},
+    {label:"Ingrediente principale", value:"Tonno sott'olio, philadelphia"},
+    {label:"Preparazione", value:"Mousse di tonno al centro del riso, chiuso a palla e avvolto in nori"},
+    {label:"Guarnizione", value:"Sesamo, semi di papavero, uova di lompo, erba cipollina"},
+  ]},
+{ name:"Riso per Sushi", cat:"pesce", catLabel:"Pesce / Antipasti", porzioni:"1", tempo:"—",
+  fields:[
+    {label:"Base", value:"—"},
+    {label:"Ingrediente principale", value:"Riso"},
+    {label:"Preparazione", value:"Cotto coperto a fuoco bassissimo 10 min, condito con aceto di riso ancora caldo"},
+    {label:"Guarnizione", value:"—"},
+  ]},
+
+// === ANTIPASTI (non di pesce) ===
+{ name:"Enoki Fritti", cat:"antipasti", catLabel:"Antipasti", porzioni:"—", tempo:"—",
+  fields:[
+    {label:"Base", value:"Panatura di farina 00, farina di riso, zenzero e paprika"},
+    {label:"Ingrediente principale", value:"Funghi enoki avvolti in alga nori"},
+    {label:"Preparazione", value:"Passati nella panatura e fritti in olio di semi"},
+    {label:"Guarnizione", value:"Cipollotto fresco, salsa a piacere"},
+  ]},
+{ name:"Rotoli di Sfoglia alla Pancetta con Tomino", cat:"antipasti", catLabel:"Antipasti", porzioni:"—", tempo:"30 min forno",
+  fields:[
+    {label:"Base", value:"Pasta sfoglia tagliata a raggiera"},
+    {label:"Ingrediente principale", value:"Pancetta a fette sottili, tomino"},
+    {label:"Preparazione", value:"Arrotolata con la pancetta, spennellata di tuorlo, forno 200°C ~30 min"},
+    {label:"Guarnizione", value:"—"},
+  ]},
+{ name:"Tartare di Manzo", cat:"antipasti", catLabel:"Antipasti", porzioni:"4", tempo:"—",
+  fields:[
+    {label:"Base", value:"Olio, sale, pepe"},
+    {label:"Ingrediente principale", value:"Filetto o scamone di manzo, battuto al coltello"},
+    {label:"Preparazione", value:"Impastata a mano fino a consistenza sfilacciata, porzionata con coppapasta"},
+    {label:"Guarnizione", value:"Filo d'olio"},
+  ]},
+{ name:"Salatini Speck e Brie", cat:"antipasti", catLabel:"Antipasti", porzioni:"—", tempo:"20-25 min forno",
+  fields:[
+    {label:"Base", value:"Pasta sfoglia, cipolla appassita in padella"},
+    {label:"Ingrediente principale", value:"Speck, brie"},
+    {label:"Preparazione", value:"Farciti in stampo da muffin, forno 180°C 20-25 min"},
+    {label:"Guarnizione", value:"Marmellata di arance, rosmarino"},
+  ]},
+
+// === DOLCI ===
+{ name:"Waffle", cat:"dolci", catLabel:"Dolci", porzioni:"6", tempo:"2h lievitazione",
+  fields:[
+    {label:"Impasto", value:"Farina, uovo, latte, zucchero, burro fuso, vaniglia, lievito di birra"},
+    {label:"Aggiunte", value:"—"},
+    {label:"Lievitazione/cottura", value:"2h lievitazione + 40 min frigo; piastra waffle 3-4 min"},
+    {label:"Finitura", value:"Sciroppo d'acero"},
+  ]},
+{ name:"Biscotti al Burro", cat:"dolci", catLabel:"Dolci", porzioni:"—", tempo:"30 min riposo + 15 min forno",
+  fields:[
+    {label:"Impasto", value:"Burro, zucchero, farina, vanillina"},
+    {label:"Aggiunte", value:"—"},
+    {label:"Lievitazione/cottura", value:"Riposo in frigo 30 min; forno 180°C 15 min"},
+    {label:"Finitura", value:"—"},
+  ]},
+{ name:"Biscotti al Limone", cat:"dolci", catLabel:"Dolci", porzioni:"—", tempo:"30 min riposo + 10 min forno",
+  fields:[
+    {label:"Impasto", value:"Farina, zucchero, burro, lievito, uovo, scorza di limone"},
+    {label:"Aggiunte", value:"—"},
+    {label:"Lievitazione/cottura", value:"Riposo 30 min; forno 180°C ~10 min"},
+    {label:"Finitura", value:"Zucchero a velo"},
+  ]},
+{ name:"Biscotti allo Zenzero", cat:"dolci", catLabel:"Dolci", porzioni:"—", tempo:"10-15 min forno",
+  fields:[
+    {label:"Impasto", value:"Farina, burro, zucchero a velo, zenzero fresco grattugiato"},
+    {label:"Aggiunte", value:"—"},
+    {label:"Lievitazione/cottura", value:"Stesi e tagliati a dischetti; forno 180°C 10-15 min"},
+    {label:"Finitura", value:"—"},
+  ]},
+{ name:"Cheesecake Fredda al Limone", cat:"dolci", catLabel:"Dolci", porzioni:"—", tempo:"4h+ frigo",
+  fields:[
+    {label:"Impasto", value:"Base di biscotti sbriciolati e burro fuso"},
+    {label:"Ripieno", value:"Philadelphia, yogurt greco, zucchero, scorza di limone"},
+    {label:"Lievitazione/cottura", value:"Base in frigo 30 min; ripieno in frigo almeno 4h (nessuna cottura)"},
+    {label:"Finitura", value:"Scorza di limone"},
+  ]},
+{ name:"Cookies", cat:"dolci", catLabel:"Dolci", porzioni:"3", tempo:"1h frigo + 12-14 min forno",
+  fields:[
+    {label:"Impasto", value:"Farine, bicarbonato, sale, burro nocciola, zuccheri, vaniglia, uova"},
+    {label:"Aggiunte", value:"Gocce di cioccolato e cioccolato fondente a pezzi"},
+    {label:"Lievitazione/cottura", value:"Riposo in frigo 1h; forno 180°C 12-14 min"},
+    {label:"Finitura", value:"—"},
+  ]},
+{ name:"Frosting al Philadelphia", cat:"dolci", catLabel:"Dolci", porzioni:"—", tempo:"1h frigo",
+  fields:[
+    {label:"Impasto", value:"Burro montato a temperatura ambiente"},
+    {label:"Aggiunte", value:"Philadelphia, zucchero a velo"},
+    {label:"Lievitazione/cottura", value:"Riposo in frigo 1h"},
+    {label:"Finitura", value:"—"},
+  ]},
+{ name:"Frosting alla Nutella", cat:"dolci", catLabel:"Dolci", porzioni:"—", tempo:"—",
+  fields:[
+    {label:"Impasto", value:"Mascarpone o philadelphia montato con zucchero"},
+    {label:"Aggiunte", value:"Cacao amaro, Nutella"},
+    {label:"Lievitazione/cottura", value:"—"},
+    {label:"Finitura", value:"—"},
+  ]},
+{ name:"Muffin", cat:"dolci", catLabel:"Dolci", porzioni:"—", tempo:"25 min forno",
+  fields:[
+    {label:"Impasto", value:"Burro, zucchero, uova, farina, lievito"},
+    {label:"Aggiunte", value:"—"},
+    {label:"Lievitazione/cottura", value:"Forno 180°C 25 min"},
+    {label:"Finitura", value:"—"},
+  ]},
+{ name:"Muffin alla Menta con Gocce di Cioccolato", cat:"dolci", catLabel:"Dolci", porzioni:"—", tempo:"20 min forno",
+  fields:[
+    {label:"Impasto", value:"Farina, latte, sciroppo di menta, uovo, burro fuso, zucchero, lievito"},
+    {label:"Aggiunte", value:"Gocce di cioccolato"},
+    {label:"Lievitazione/cottura", value:"Forno 180°C 20 min"},
+    {label:"Finitura", value:"—"},
+  ]},
+{ name:"Muffin alla Menta, Nutella e Cocco", cat:"dolci", catLabel:"Dolci", porzioni:"—", tempo:"20-25 min forno",
+  fields:[
+    {label:"Impasto", value:"Yogurt, latte, zucchero, uovo, burro, farina di cocco, sciroppo di menta, farina, lievito"},
+    {label:"Aggiunte", value:"—"},
+    {label:"Lievitazione/cottura", value:"Forno 200°C 20-25 min"},
+    {label:"Finitura", value:"—"},
+  ]},
+{ name:"Pancake", cat:"dolci", catLabel:"Dolci", porzioni:"—", tempo:"—",
+  fields:[
+    {label:"Impasto", value:"Farina, uova separate, burro fuso, latte, lievito, zucchero"},
+    {label:"Aggiunte", value:"Albumi montati incorporati delicatamente"},
+    {label:"Lievitazione/cottura", value:"Padella antiaderente, girati quando i bordi asciugano"},
+    {label:"Finitura", value:"—"},
+  ]},
+{ name:"Pancake alla Banana", cat:"dolci", catLabel:"Dolci", porzioni:"—", tempo:"—",
+  fields:[
+    {label:"Impasto", value:"Banana schiacciata, uovo, cannella"},
+    {label:"Aggiunte", value:"—"},
+    {label:"Lievitazione/cottura", value:"Padella antiaderente a fiamma bassa, girati quando compaiono bollicine"},
+    {label:"Finitura", value:"—"},
+  ]},
+{ name:"Tenerina al Cioccolato", cat:"dolci", catLabel:"Dolci", porzioni:"—", tempo:"30 min forno",
+  fields:[
+    {label:"Impasto", value:"Cioccolato fondente, burro e zucchero fusi a bagnomaria, uova, fecola"},
+    {label:"Aggiunte", value:"—"},
+    {label:"Lievitazione/cottura", value:"Forno 180°C 30 min"},
+    {label:"Finitura", value:"Zucchero a velo"},
+  ]},
+{ name:"Torta alla Menta, Nutella e Cocco", cat:"dolci", catLabel:"Dolci", porzioni:"—", tempo:"40 min forno",
+  fields:[
+    {label:"Impasto", value:"Uova, zucchero, yogurt, burro fuso, sciroppo di menta, farina, farina di cocco, vanillina, lievito"},
+    {label:"Aggiunte", value:"—"},
+    {label:"Lievitazione/cottura", value:"Forno 180°C 40 min"},
+    {label:"Finitura", value:"Nutella e farina di cocco in superficie"},
+  ]},
+{ name:"Torta alla Robiola", cat:"dolci", catLabel:"Dolci", porzioni:"—", tempo:"1h frigo + 1h30 forno",
+  fields:[
+    {label:"Impasto", value:"Base di biscotti tritati e burro fuso"},
+    {label:"Ripieno", value:"Robiola, tuorli, zucchero, panna, farina, vanillina, albumi montati"},
+    {label:"Lievitazione/cottura", value:"Base in frigo 1h; forno statico 150°C ~1h30"},
+    {label:"Finitura", value:"—"},
+  ]},
+{ name:"Torta Fredda allo Yogurt", cat:"dolci", catLabel:"Dolci", porzioni:"—", tempo:"4h+ frigo",
+  fields:[
+    {label:"Impasto", value:"Base di biscotti sbriciolati e burro fuso"},
+    {label:"Ripieno", value:"Panna montata, yogurt, zucchero a velo"},
+    {label:"Lievitazione/cottura", value:"Base in frigo 30 min; ripieno in frigo almeno 4h"},
+    {label:"Finitura", value:"—"},
+  ]},
+{ name:"Torta Soffice alle More", cat:"dolci", catLabel:"Dolci", porzioni:"1", tempo:"40 min forno",
+  fields:[
+    {label:"Impasto", value:"Uova, zucchero, vaniglia, olio, yogurt, farina, amido di mais, lievito"},
+    {label:"Aggiunte", value:"More fresche in superficie"},
+    {label:"Lievitazione/cottura", value:"Forno 170°C 40 min"},
+    {label:"Finitura", value:"—"},
+  ]},
+{ name:"Waffle Belgi", cat:"dolci", catLabel:"Dolci", porzioni:"—", tempo:"5 min piastra",
+  fields:[
+    {label:"Impasto", value:"Tuorli e zucchero, burro fuso, albumi montati, farina, sale, vanillina"},
+    {label:"Aggiunte", value:"—"},
+    {label:"Lievitazione/cottura", value:"Piastra per waffle calda, 5 min"},
+    {label:"Finitura", value:"Zucchero a velo"},
+  ]},
+{ name:"Mug Cake", cat:"dolci", catLabel:"Dolci", porzioni:"1", tempo:"1 min microonde",
+  fields:[
+    {label:"Impasto", value:"Farina, zucchero, cacao amaro, lievito, olio, latte"},
+    {label:"Aggiunte", value:"Nutella al centro"},
+    {label:"Lievitazione/cottura", value:"Microonde, 1 minuto"},
+    {label:"Finitura", value:"—"},
+  ]},
+
+// === PANE / FORNERIA ===
+{ name:"Focaccia di Mauri", cat:"pane", catLabel:"Pane / Forneria", porzioni:"—", tempo:"3h lievitazione",
+  fields:[
+    {label:"Impasto", value:"Farina Manitoba, lievito, zucchero, sale, olio, acqua — incordato in planetaria"},
+    {label:"Lievitazione", value:"2h in massa + 1h in teglia"},
+    {label:"Cottura", value:"Forno 200°C, ~40 min"},
+    {label:"Finitura", value:"Salamoia (olio evo e acqua), olive"},
+  ]},
+{ name:"Impasto per la Pizza", cat:"pane", catLabel:"Pane / Forneria", porzioni:"3", tempo:"~4h lievitazione",
+  fields:[
+    {label:"Impasto", value:"Farina 00, lievito di birra, olio, acqua, sale — impasto \"no knead\""},
+    {label:"Lievitazione", value:"30 min a temperatura ambiente, poi pieghe e riposi da 20 min, infine almeno 3h"},
+    {label:"Cottura", value:"—"},
+    {label:"Finitura", value:"—"},
+  ]},
+{ name:"Piadina", cat:"pane", catLabel:"Pane / Forneria", porzioni:"6-7 piadine", tempo:"—",
+  fields:[
+    {label:"Impasto", value:"Farina, strutto, sale, acqua calda, latte, lievito"},
+    {label:"Lievitazione", value:"—"},
+    {label:"Cottura", value:"Su piastra, girata quando si formano le crosticine"},
+    {label:"Finitura", value:"—"},
+  ]},
+{ name:"Panini per Burger", cat:"pane", catLabel:"Pane / Forneria", porzioni:"8", tempo:"~3-4h lievitazione",
+  fields:[
+    {label:"Impasto", value:"Farina Manitoba, burro, uovo, acqua, lievito, zucchero, sale"},
+    {label:"Lievitazione", value:"1-2h in massa, poi 1h dopo la formatura"},
+    {label:"Cottura", value:"Forno 190°C, ~15 min"},
+    {label:"Finitura", value:"Uovo sbattuto, semi di sesamo o papavero"},
+  ]},
+{ name:"Ciabatta", cat:"pane", catLabel:"Pane / Forneria", porzioni:"—", tempo:"~2h15 lievitazione",
+  fields:[
+    {label:"Impasto", value:"Farina Manitoba, acqua, sale, olio, lievito fresco, impastato a mano nel contenitore"},
+    {label:"Lievitazione", value:"2 giri di pieghe con riposi da 1h, poi 15 min, poi 10 min dopo la porzionatura"},
+    {label:"Cottura", value:"Forno 250°C ventilato 10 min con vapore, poi 220°C fino a doratura"},
+    {label:"Finitura", value:"—"},
+  ]},
+{ name:"Pita", cat:"pane", catLabel:"Pane / Forneria", porzioni:"8", tempo:"~3h lievitazione",
+  fields:[
+    {label:"Impasto", value:"Farine, miele, lievito di birra, sale, olio, acqua — lievitino iniziale"},
+    {label:"Lievitazione", value:"1h in forno con acqua bollente, poi altre due lievitazioni da 1h"},
+    {label:"Cottura", value:"Teglia rovente in forno alla massima potenza, 2 min per lato"},
+    {label:"Finitura", value:"—"},
+  ]},
+{ name:"Pane Arso", cat:"pane", catLabel:"Pane / Forneria", porzioni:"1", tempo:"2h + una notte in frigo",
+  fields:[
+    {label:"Impasto", value:"Farina di grano arso, farina 1, pasta madre essiccata, acqua, sale"},
+    {label:"Lievitazione", value:"2h a temperatura ambiente, poi tutta la notte in frigo, +1h dopo la formatura"},
+    {label:"Cottura", value:"Forno 230°C 15 min, poi 200°C altri 30 min"},
+    {label:"Finitura", value:"—"},
+  ]},
+{ name:"Treccia ai Semi di Papavero", cat:"pane", catLabel:"Pane / Forneria", porzioni:"1", tempo:"1h lievitazione",
+  fields:[
+    {label:"Impasto", value:"Farina, acqua, semi di papavero, tuorlo, zucchero, lievito, sale, olio"},
+    {label:"Lievitazione", value:"1h fino al raddoppio"},
+    {label:"Cottura", value:"Forno 180°C 30 min"},
+    {label:"Finitura", value:"Tuorlo e latte spennellati, semi di papavero in superficie"},
+  ]},
+{ name:"Big Mac", cat:"pane", catLabel:"Pane / Panini", porzioni:"2", tempo:"1h riposo salsa",
+  fields:[
+    {label:"Base", value:"Panini per hamburger con semi di sesamo, tostati"},
+    {label:"Farcitura", value:"Hamburger di manzo speziato, formaggio, lattuga, cetriolini, cipolla"},
+    {label:"Preparazione", value:"Salsa speciale (maionese, senape, ketchup, spezie, cetriolini) riposata 1h; carne cotta su piastra"},
+    {label:"Guarnizione", value:"Salsa speciale su ogni strato"},
+  ]},
+{ name:"Burger Vegetariano con Germogli", cat:"pane", catLabel:"Pane / Panini", porzioni:"2", tempo:"—",
+  fields:[
+    {label:"Base", value:"Panini integrali tostati"},
+    {label:"Farcitura", value:"Hamburger di ceci, fagioli e carote; germogli, pomodoro, fontina"},
+    {label:"Preparazione", value:"Verdure soffritte, legumi frullati con tahina, hamburger cotti in piastra"},
+    {label:"Guarnizione", value:"Salsa di tahina e limone, chips di cavolo nero al forno"},
+  ]},
+{ name:"Panini Gusto Crispy in Padella", cat:"pane", catLabel:"Pane / Panini", porzioni:"8", tempo:"30 min riposo",
+  fields:[
+    {label:"Impasto", value:"Farina, yogurt greco, sale, olio, lievito istantaneo"},
+    {label:"Farcitura", value:"Macinato magro rosolato con cipolla e brodo, salsa (mayo, yogurt, senape, concentrato), formaggio"},
+    {label:"Preparazione", value:"Panetti stesi, farciti e cotti in padella con coperchio"},
+    {label:"Guarnizione", value:"—"},
+  ]},
+{ name:"Toast all'Uovo", cat:"pane", catLabel:"Pane / Panini", porzioni:"1", tempo:"—",
+  fields:[
+    {label:"Base", value:"Pane in cassetta tostato"},
+    {label:"Farcitura", value:"Taleggio, uovo all'occhio di bue, prosciutto crudo, lattuga"},
+    {label:"Preparazione", value:"Uovo cotto e assemblato caldo sul formaggio fuso"},
+    {label:"Guarnizione", value:"Senape, pepe"},
+  ]},
+
+// === CONTORNI ===
+{ name:"Cipolle in Agrodolce", cat:"contorni", catLabel:"Contorni", porzioni:"—", tempo:"—",
+  fields:[
+    {label:"Base", value:"Aceto bianco, zucchero e sale sciolti in acqua"},
+    {label:"Ingredienti", value:"Cipolle a filetti"},
+    {label:"Cottura", value:"Marinate a crudo nell'aceto caldo, fino a raffreddamento"},
+    {label:"Finitura", value:"Pepe, menta, scorza di limone, zenzero"},
+  ]},
+{ name:"Contorno di Pomodori", cat:"contorni", catLabel:"Contorni", porzioni:"—", tempo:"—",
+  fields:[
+    {label:"Base", value:"Crema di fagioli con cipolla rossa, aglio e rosmarino"},
+    {label:"Ingredienti", value:"Pomodori cuore di bue acerbi"},
+    {label:"Cottura", value:"Scottati in padella antiaderente (o forno 240°C 10 min)"},
+    {label:"Finitura", value:"—"},
+  ]},
+{ name:"Fagioli all'Uccelletto", cat:"contorni", catLabel:"Contorni", porzioni:"4", tempo:"20-25 min",
+  fields:[
+    {label:"Soffritto", value:"Aglio, salvia, rosmarino in olio"},
+    {label:"Ingredienti", value:"Fagioli cannellini, passata di pomodoro"},
+    {label:"Cottura", value:"20-25 min in padella coperta, a fuoco dolce"},
+    {label:"Finitura", value:"Sale e pepe"},
+  ]},
+{ name:"Hummus di Ceci", cat:"contorni", catLabel:"Contorni", porzioni:"4", tempo:"30 min",
+  fields:[
+    {label:"Base", value:"Aglio, tahina, olio, limone"},
+    {label:"Ingredienti", value:"Ceci lessati"},
+    {label:"Cottura", value:"Frullato, riposo in frigo 15 min"},
+    {label:"Finitura", value:"Prezzemolo, paprika"},
+  ]},
+{ name:"Insalata di Patate Giapponese", cat:"contorni", catLabel:"Contorni", porzioni:"1", tempo:"—",
+  fields:[
+    {label:"Base", value:"Dashi e aceto di riso assorbiti a caldo dalle patate"},
+    {label:"Ingredienti", value:"Patate lesse schiacciate, uova sode, prosciutto, carota, cetriolo, cipolla"},
+    {label:"Cottura", value:"Patate bollite; il resto mescolato a freddo con maionese"},
+    {label:"Finitura", value:"Semi di sesamo, shichimi togarashi"},
+  ]},
+{ name:"Patate Ripiene al Formaggio", cat:"contorni", catLabel:"Contorni", porzioni:"4", tempo:"20 min forno",
+  fields:[
+    {label:"Base", value:"—"},
+    {label:"Ingredienti", value:"Patate lesse svuotate, philadelphia, formaggio filante, grana o pecorino"},
+    {label:"Cottura", value:"Forno statico 200°C ~20 min"},
+    {label:"Finitura", value:"Erba cipollina, noce moscata"},
+  ]},
+{ name:"Polenta Taragna", cat:"contorni", catLabel:"Contorni", porzioni:"4", tempo:"~65 min",
+  fields:[
+    {label:"Base", value:"—"},
+    {label:"Ingredienti", value:"Farina per polenta taragna, burro di montagna, formaggi morbidi"},
+    {label:"Cottura", value:"~45 min mescolando, poi formaggi e burro incorporati altri 20 min"},
+    {label:"Finitura", value:"—"},
+  ]},
+{ name:"Purè di Patate", cat:"contorni", catLabel:"Contorni", porzioni:"4", tempo:"—",
+  fields:[
+    {label:"Base", value:"—"},
+    {label:"Ingredienti", value:"Patate, latte, burro, grana"},
+    {label:"Cottura", value:"Patate lesse passate allo schiacciapatate, mantecate con burro e latte caldo"},
+    {label:"Finitura", value:"Noce moscata"},
+  ]},
+{ name:"Tuorli Marinati alla Soia", cat:"contorni", catLabel:"Contorni", porzioni:"—", tempo:"2-3 giorni marinatura",
+  fields:[
+    {label:"Base", value:"Salsa di soia, aceto di riso, zenzero, shichimi togarashi"},
+    {label:"Ingredienti", value:"Tuorli d'uovo"},
+    {label:"Cottura", value:"Marinatura in frigo 2-3 giorni, nessuna cottura"},
+    {label:"Finitura", value:"—"},
+  ]},
+{ name:"Giardiniera", cat:"contorni", catLabel:"Contorni", porzioni:"—", tempo:"24h+ riposo",
+  fields:[
+    {label:"Base", value:"Aceto di mele, acqua, sale, zucchero, spezie (anice stellato, cardamomo, cannella)"},
+    {label:"Ingredienti", value:"Verdure miste a pezzi"},
+    {label:"Cottura", value:"Marinatura a freddo, riposo in frigo almeno 24h"},
+    {label:"Finitura", value:"Buccia di arancia e limone, pepe rosa"},
+  ]},
+
+// === BEVANDE ===
+{ name:"Kentucky Mule", cat:"bevande", catLabel:"Bevande", porzioni:"1", tempo:"—",
+  fields:[
+    {label:"Base", value:"Bourbon"},
+    {label:"Ingredienti", value:"Succo di lime, ginger beer"},
+    {label:"Preparazione", value:"Costruito direttamente nel bicchiere con ghiaccio"},
+    {label:"Guarnizione", value:"Rametto di menta"},
+  ]},
+{ name:"Mon-tea-negro", cat:"bevande", catLabel:"Bevande", porzioni:"1", tempo:"5 min",
+  fields:[
+    {label:"Base", value:"Amaro Montenegro"},
+    {label:"Ingredienti", value:"Tè freddo, sciroppo di zucchero, succo di lime"},
+    {label:"Preparazione", value:"Amaro e sciroppo mescolati, allungati con tè freddo su ghiaccio"},
+    {label:"Guarnizione", value:"Menta, zenzero a fettine, lime"},
+  ]},
+{ name:"Montemule", cat:"bevande", catLabel:"Bevande", porzioni:"1", tempo:"—",
+  fields:[
+    {label:"Base", value:"Amaro Montenegro e bourbon"},
+    {label:"Ingredienti", value:"Succo di lime, ginger beer"},
+    {label:"Preparazione", value:"Costruito nel bicchiere con ghiaccio"},
+    {label:"Guarnizione", value:"Fetta di lime, rametto di menta"},
+  ]},
+{ name:"Tè delle Feste", cat:"bevande", catLabel:"Bevande", porzioni:"20", tempo:"1h infusione",
+  fields:[
+    {label:"Base", value:"Tè freddo alla pesca"},
+    {label:"Ingredienti", value:"Vodka, lime, limone"},
+    {label:"Preparazione", value:"Miscelato nel dispenser; agrumi lasciati in infusione almeno 1h"},
+    {label:"Guarnizione", value:"Sciroppo di zucchero di canna a piacere"},
+  ]},
+{ name:"Cocktail Rosa da Femmine", cat:"bevande", catLabel:"Bevande", porzioni:"—", tempo:"—",
+  fields:[
+    {label:"Base", value:"Tequila"},
+    {label:"Ingredienti", value:"Succo di pompelmo fresco, succo di lime, zucchero, club soda"},
+    {label:"Preparazione", value:"Shakerato con ghiaccio, filtrato, allungato con soda"},
+    {label:"Guarnizione", value:"Bordo salato, spicchio di pompelmo o lime"},
+  ]},
+{ name:"Tisana all'Arancia", cat:"bevande", catLabel:"Bevande", porzioni:"1", tempo:"10 min",
+  fields:[
+    {label:"Base", value:"Acqua"},
+    {label:"Ingredienti", value:"Fetta d'arancia, cannella, noce moscata"},
+    {label:"Preparazione", value:"Sobbollita 5 min, filtrata"},
+    {label:"Guarnizione", value:"Miele e brandy opzionali, fetta d'arancia"},
+  ]},
+
+// === PIATTI UNICI ===
+{ name:"Chili con Carne Super Extra Very Hot", cat:"piatti_unici", catLabel:"Piatti Unici", porzioni:"2", tempo:"—",
+  fields:[
+    {label:"Base", value:"Soffritto di cipolle rosse, sfumato al vino bianco"},
+    {label:"Ingredienti", value:"Peperoni dolci e piccanti, macinato misto, spezie (curcuma, cumino, carvi, paprica)"},
+    {label:"Cottura", value:"Parte vegetale e carne cotte separatamente, poi unite e cotte insieme 10-15 min"},
+    {label:"Guarnizione", value:"Fagioli neri e panna acida (opzionali)"},
+  ]},
+{ name:"Fagioli Piccanti", cat:"piatti_unici", catLabel:"Piatti Unici", porzioni:"—", tempo:"1h",
+  fields:[
+    {label:"Base", value:"Aglio, cipolla, rosmarino e peperoncino soffritti con le salsicce"},
+    {label:"Ingredienti", value:"Fagioli borlotti lessati, passata di pomodoro"},
+    {label:"Cottura", value:"~1h a fiamma medio-bassa, con tabasco e worcestershire"},
+    {label:"Guarnizione", value:"—"},
+  ]},
+{ name:"Frittata con Verza e Patate", cat:"piatti_unici", catLabel:"Piatti Unici", porzioni:"—", tempo:"20 min forno",
+  fields:[
+    {label:"Base", value:"Verza appassita e patate rosolate, separatamente"},
+    {label:"Ingredienti", value:"Uova, parmigiano"},
+    {label:"Cottura", value:"Forno ventilato 180°C ~20 min (o in padella)"},
+    {label:"Guarnizione", value:"Erba cipollina, pepe"},
+  ]},
+{ name:"Riso Saltato con Cavolo Nero e Zenzero", cat:"piatti_unici", catLabel:"Piatti Unici", porzioni:"—", tempo:"15 min",
+  fields:[
+    {label:"Base", value:"Pancetta, cipollotto, aglio e zenzero saltati in olio di sesamo"},
+    {label:"Ingredienti", value:"Riso cotto e raffreddato, piselli, cavolo nero, uova"},
+    {label:"Cottura", value:"Riso saltato a fiamma alta fino a croccante, poi verdure e uova incorporate"},
+    {label:"Guarnizione", value:"Cipollotto verde, salsa di soia"},
+  ]},
+{ name:"Shabu Shabu", cat:"piatti_unici", catLabel:"Piatti Unici", porzioni:"4", tempo:"—",
+  fields:[
+    {label:"Base", value:"Brodo dashi di kombu e sakè"},
+    {label:"Ingredienti", value:"Carne wagyu a fette sottili, cavolo cinese, porro, carota, funghi"},
+    {label:"Cottura", value:"Fonduta: ingredienti immersi pochi secondi nel brodo bollente"},
+    {label:"Guarnizione", value:"Salsa tara (soia, limone, dashi)"},
+  ]},
+{ name:"Risotto con Ossobuco", cat:"piatti_unici", catLabel:"Piatti Unici", porzioni:"4", tempo:"~1h30",
+  fields:[
+    {label:"Base", value:"Cipolla e midollo rosolati per il risotto; ossibuchi infarinati e rosolati con aglio"},
+    {label:"Ingredienti", value:"Riso Carnaroli/Vialone, ossibuchi di vitello, gremolata (prezzemolo, aglio, scorza di limone)"},
+    {label:"Cottura", value:"Ossibuchi brasati ~1h10 con vino e brodo; risotto allo zafferano in parallelo, 16-18 min"},
+    {label:"Guarnizione", value:"Gremolata sull'ossobuco; grana e burro nel risotto"},
+  ]},
+
+{ name:"Ricetta Chili Senza Carne", cat:"piatti_unici", catLabel:"Piatti Unici", porzioni:"4", tempo:"20-25 min",
+  fields:[
+    {label:"Base", value:"Soffritto di cipolla e aglio"},
+    {label:"Ingredienti", value:"Carote, peperone rosso, fagioli rossi, mais dolce, pomodori pelati e passata"},
+    {label:"Cottura", value:"20-25 min a fuoco medio-basso, con paprika dolce/affumicata e cumino"},
+    {label:"Guarnizione", value:"Coriandolo o prezzemolo; servito con riso integrale, tortillas, nachos o pane tostato"},
+  ]},
+
+// === SALSE / CONDIMENTI ===
+{ name:"Guacamole", cat:"salse", catLabel:"Salse / Condimenti", porzioni:"1", tempo:"15 min riposo",
+  fields:[
+    {label:"Base", value:"Avocado schiacciato con succo di lime"},
+    {label:"Ingredienti", value:"Pomodoro a cubetti, cipolla macerata nell'aceto, aglio, peperoncino"},
+    {label:"Lavorazione", value:"Mescolato a mano, riposo in frigo 15 min"},
+    {label:"Uso", value:"Con tabasco e worcestershire, per tacos/nachos"},
+  ]},
+{ name:"Burro alle Erbe", cat:"salse", catLabel:"Salse / Condimenti", porzioni:"—", tempo:"1h frigo",
+  fields:[
+    {label:"Base", value:"Burro morbido montato"},
+    {label:"Ingredienti", value:"Erbe miste tritate, erba cipollina, senape, aglio in polvere"},
+    {label:"Lavorazione", value:"Formato a ciuffi o salsicciotto, freddo in frigo 1h"},
+    {label:"Uso", value:"Monoporzioni o a fette"},
+  ]},
+{ name:"Condimento al Limone", cat:"salse", catLabel:"Salse / Condimenti", porzioni:"—", tempo:"1h infusione",
+  fields:[
+    {label:"Base", value:"Olio EVO"},
+    {label:"Ingredienti", value:"Scorza e succo di limone, aglio schiacciato"},
+    {label:"Lavorazione", value:"Infusione in frigo almeno 1h"},
+    {label:"Uso", value:"—"},
+  ]},
+{ name:"Crema di Feta e Piselli", cat:"salse", catLabel:"Salse / Condimenti", porzioni:"4", tempo:"—",
+  fields:[
+    {label:"Base", value:"Feta"},
+    {label:"Ingredienti", value:"Piselli sbollentati, menta"},
+    {label:"Lavorazione", value:"Frullata con olio fino a crema omogenea"},
+    {label:"Uso", value:"Pepe a finire"},
+  ]},
+{ name:"Insalata Piccante di Tonno", cat:"salse", catLabel:"Salse / Condimenti", porzioni:"2", tempo:"riposo una notte",
+  fields:[
+    {label:"Base", value:"Insalata indivia sminuzzata, cetrioli a cubetti"},
+    {label:"Ingrediente principale", value:"Tonno a fettine, marinato con salsa chili e olio di sesamo"},
+    {label:"Condimento (ponzu)", value:"Salsa di soia, aceto di riso, succo di limone, konbu — riposo una notte"},
+    {label:"Guarnizione", value:"Riccioli di daikon"},
+  ]},
+{ name:"Maionese al Pepe Rosa", cat:"salse", catLabel:"Salse / Condimenti", porzioni:"1", tempo:"—",
+  fields:[
+    {label:"Base", value:"Maionese"},
+    {label:"Ingredienti", value:"Olio aromatizzato, scorza di lime, pepe rosa"},
+    {label:"Lavorazione", value:"Amalgamata a mano"},
+    {label:"Uso", value:"Sale rosa a finire"},
+  ]},
+{ name:"Maionese Piccante per Sushi", cat:"salse", catLabel:"Salse / Condimenti", porzioni:"1", tempo:"—",
+  fields:[
+    {label:"Base", value:"Maionese"},
+    {label:"Ingredienti", value:"Pasta di peperoncino allo yuzu, erba cipollina"},
+    {label:"Lavorazione", value:"Amalgamata"},
+    {label:"Uso", value:"—"},
+  ]},
+{ name:"Salsa Agrodolce Cinese", cat:"salse", catLabel:"Salse / Condimenti", porzioni:"—", tempo:"—",
+  fields:[
+    {label:"Base", value:"Acqua e aceto di riso"},
+    {label:"Ingredienti", value:"Zucchero, concentrato di pomodoro, maizena"},
+    {label:"Lavorazione", value:"Addensata a fuoco dolce fino a fluida e viscosa"},
+    {label:"Uso", value:"—"},
+  ]},
+{ name:"Salsa al Miele", cat:"salse", catLabel:"Salse / Condimenti", porzioni:"1", tempo:"5 min",
+  fields:[
+    {label:"Base", value:"Burro fuso"},
+    {label:"Ingredienti", value:"Aglio, senape, paprika, zenzero, miele, maionese"},
+    {label:"Lavorazione", value:"Frullata fino a crema omogenea"},
+    {label:"Uso", value:"—"},
+  ]},
+{ name:"Salsa alla Senape", cat:"salse", catLabel:"Salse / Condimenti", porzioni:"—", tempo:"—",
+  fields:[
+    {label:"Base", value:"Maionese"},
+    {label:"Ingredienti", value:"Senape, aceto, miele, aglio"},
+    {label:"Lavorazione", value:"Sbattuta con la frusta"},
+    {label:"Uso", value:"—"},
+  ]},
+{ name:"Salsa Barbecue", cat:"salse", catLabel:"Salse / Condimenti", porzioni:"4", tempo:"—",
+  fields:[
+    {label:"Base", value:"Cipolla e aglio soffritti, caramellati con zucchero di canna"},
+    {label:"Ingredienti", value:"Sciroppo d'acero, ketchup, paprika forte, aceto di mele, senape"},
+    {label:"Lavorazione", value:"Fatta addensare mescolando"},
+    {label:"Uso", value:"—"},
+  ]},
+{ name:"Salsa per Arrosto alla Soia", cat:"salse", catLabel:"Salse / Condimenti", porzioni:"—", tempo:"—",
+  fields:[
+    {label:"Base", value:"Salsa di soia e birra"},
+    {label:"Ingredienti", value:"Aneto, zenzero, limone, pepe rosa in sacchetto filtrante"},
+    {label:"Lavorazione", value:"Sobbollita con il fondo di cottura dell'arrosto, addensata con panna"},
+    {label:"Uso", value:"Da servire con l'arrosto"},
+  ]},
+{ name:"Salsa per Pinzimonio", cat:"salse", catLabel:"Salse / Condimenti", porzioni:"—", tempo:"—",
+  fields:[
+    {label:"Base", value:"Philadelphia e yogurt greco"},
+    {label:"Ingredienti", value:"Prezzemolo tritato, succo di limone"},
+    {label:"Lavorazione", value:"Amalgamata a mano"},
+    {label:"Uso", value:"Pepe bianco a finire"},
+  ]},
+{ name:"Maionese Piccante", cat:"salse", catLabel:"Salse / Condimenti", porzioni:"—", tempo:"—",
+  fields:[
+    {label:"Base", value:"Tuorlo e olio vegetale (maionese fatta in casa)"},
+    {label:"Ingredienti", value:"Aceto di riso, salsa chili all'aglio"},
+    {label:"Lavorazione", value:"Emulsionata con la frusta"},
+    {label:"Uso", value:"—"},
+  ]},
+{ name:"Salsa Tipo Droga", cat:"salse", catLabel:"Salse / Condimenti", porzioni:"—", tempo:"40 min forno",
+  fields:[
+    {label:"Base", value:"Pomodori e peperoni friggitelli arrostiti"},
+    {label:"Ingredienti", value:"Peperoncino fresco, testa d'aglio arrostita"},
+    {label:"Lavorazione", value:"Forno 180°C 40 min, poi frullati"},
+    {label:"Uso", value:"—"},
+  ]},
+{ name:"Senape al Miele", cat:"salse", catLabel:"Salse / Condimenti", porzioni:"4", tempo:"—",
+  fields:[
+    {label:"Base", value:"Senape"},
+    {label:"Ingredienti", value:"Miele di acacia, zucchero"},
+    {label:"Lavorazione", value:"Sciroppo caldo amalgamato alla senape"},
+    {label:"Uso", value:"—"},
+  ]},
+{ name:"Miscuglio Piccantino", cat:"salse", catLabel:"Salse / Condimenti", porzioni:"—", tempo:"—",
+  fields:[
+    {label:"Base", value:"Yogurt greco e philadelphia"},
+    {label:"Ingredienti", value:"Maionese, salsa piccante, peperoncini sottaceto, cipollotto"},
+    {label:"Lavorazione", value:"Mescolati insieme"},
+    {label:"Uso", value:"—"},
+  ]},
+{ name:"Hummus Piccante", cat:"salse", catLabel:"Salse / Condimenti", porzioni:"—", tempo:"—",
+  fields:[
+    {label:"Base", value:"Ceci"},
+    {label:"Ingredienti", value:"Tahina, salsa piccante, succo di limone, aglio in polvere"},
+    {label:"Lavorazione", value:"Frullato con olio di sesamo"},
+    {label:"Uso", value:"Paprika e sesamo tostato a finire"},
+  ]},
+];
+
+const CAT_ORDER = ["zuppe","primi","secondi","pesce","antipasti","piatti_unici","secondi","contorni","salse","pane","dolci","bevande"];
+const catLabels = {};
+RECIPES.forEach(r => { if(!catLabels[r.cat]) catLabels[r.cat] = r.catLabel.split(' / ')[0]; });
+const cats = Object.keys(catLabels).sort((a,b) => {
+  const ia = CAT_ORDER.indexOf(a), ib = CAT_ORDER.indexOf(b);
+  return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+});
+
+const grid = document.getElementById('grid');
+const emptyEl = document.getElementById('empty');
+const countEl = document.getElementById('count');
+const searchInput = document.getElementById('search');
+const chipsEl = document.getElementById('chips');
+
+let state = { q: '', cat: 'all' };
+try {
+  const saved = JSON.parse(localStorage.getItem('comande-filter') || '{}');
+  if (saved.cat) state.cat = saved.cat;
+  if (saved.q) state.q = saved.q;
+} catch(e) {}
+
+function saveState(){
+  try { localStorage.setItem('comande-filter', JSON.stringify(state)); } catch(e) {}
+}
+
+function buildChips(){
+  chipsEl.innerHTML = '';
+  const allChip = document.createElement('span');
+  allChip.className = 'chip';
+  allChip.dataset.cat = 'all';
+  allChip.textContent = 'Tutte (' + RECIPES.length + ')';
+  chipsEl.appendChild(allChip);
+  cats.forEach(cat => {
+    const n = RECIPES.filter(r => r.cat === cat).length;
+    const chip = document.createElement('span');
+    chip.className = 'chip';
+    chip.dataset.cat = cat;
+    chip.textContent = catLabels[cat] + ' (' + n + ')';
+    chipsEl.appendChild(chip);
+  });
+  chipsEl.querySelectorAll('.chip').forEach(chip => {
+    chip.setAttribute('aria-pressed', chip.dataset.cat === state.cat ? 'true' : 'false');
+    chip.addEventListener('click', () => {
+      state.cat = chip.dataset.cat;
+      saveState();
+      buildChips();
+      render();
+    });
+  });
+}
+
+function render(){
+  const q = state.q.trim().toLowerCase();
+  const filtered = RECIPES.filter(r => {
+    if (state.cat !== 'all' && r.cat !== state.cat) return false;
+    if (q && !r.name.toLowerCase().includes(q)) return false;
+    return true;
+  });
+  countEl.textContent = filtered.length + ' / ' + RECIPES.length + ' ricette';
+  grid.innerHTML = '';
+  emptyEl.hidden = filtered.length > 0;
+  filtered.forEach(r => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <div class="card-head" style="background:var(--c-${r.cat}, var(--c-default))">
+        <div class="name"></div>
+        <div class="meta"><span class="catlabel"></span><span>·</span><span class="porz"></span><span>·</span><span class="tempo"></span></div>
+      </div>
+      <div class="card-body">
+        ${r.fields.map(() => `
+          <div class="field">
+            <div class="label"></div>
+            <div class="value"></div>
+          </div>`).join('')}
+      </div>
+    `;
+    card.querySelector('.name').textContent = r.name;
+    card.querySelector('.catlabel').textContent = r.catLabel;
+    card.querySelector('.porz').textContent = (r.porzioni === '—' ? '—' : r.porzioni + ' porz.');
+    card.querySelector('.tempo').textContent = r.tempo;
+    const fieldEls = card.querySelectorAll('.field');
+    r.fields.forEach((f, i) => {
+      fieldEls[i].querySelector('.label').textContent = f.label;
+      const valueEl = fieldEls[i].querySelector('.value');
+      if (f.value === '—') {
+        const span = document.createElement('span');
+        span.className = 'none';
+        span.textContent = '—';
+        valueEl.appendChild(span);
+      } else {
+        valueEl.textContent = f.value;
+      }
+    });
+    grid.appendChild(card);
+  });
+}
+
+searchInput.value = state.q;
+searchInput.addEventListener('input', e => {
+  state.q = e.target.value;
+  saveState();
+  render();
+});
+
+buildChips();
+render();
+</script>
