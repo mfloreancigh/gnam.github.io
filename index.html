@@ -1,7 +1,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
-<title>Gnam</title>
+<title>GNAM</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
 <style>
 :root{
@@ -80,6 +79,7 @@ body{
   color:var(--ink);
   font-family:"Work Sans",system-ui,sans-serif;
 }
+body.modal-open{overflow:hidden;}
 
 .topbar{
   position:sticky; top:0; z-index:10;
@@ -161,6 +161,20 @@ body{
 .card-head{
   padding:12px 14px 10px;
   color:#fff;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  cursor:pointer;
+}
+.card-head:hover, .card-head:focus-visible{filter:brightness(1.1);}
+.card-head:focus-visible{outline:2px solid #fff; outline-offset:-3px;}
+.card-head .head-text{flex:1; min-width:0;}
+.card-head .chevron{
+  font-family:"IBM Plex Mono",monospace;
+  font-size:22px;
+  line-height:1;
+  opacity:0.75;
+  flex-shrink:0;
 }
 .card-head .name{
   font-family:"Oswald",sans-serif;
@@ -179,6 +193,94 @@ body{
   opacity:0.92;
   margin-top:4px;
   display:flex; gap:8px; flex-wrap:wrap;
+}
+
+.modal-overlay{
+  position:fixed; inset:0;
+  background:rgba(10,12,8,0.6);
+  display:flex; align-items:center; justify-content:center;
+  padding:20px;
+  z-index:100;
+}
+.modal-overlay[hidden]{display:none;}
+.modal{
+  background:var(--surface);
+  border-radius:8px;
+  max-width:640px;
+  width:100%;
+  max-height:85vh;
+  overflow-y:auto;
+  box-shadow:0 20px 60px rgba(0,0,0,0.35);
+}
+.modal-head{
+  padding:18px 50px 16px 18px;
+  color:#fff;
+  position:sticky; top:0;
+  z-index:1;
+}
+.modal-head .name{
+  font-family:"Oswald",sans-serif;
+  font-weight:700;
+  font-size:22px;
+  line-height:1.2;
+  text-transform:uppercase;
+  text-wrap:balance;
+}
+.modal-head .meta{
+  font-family:"IBM Plex Mono",monospace;
+  font-size:11px;
+  letter-spacing:0.03em;
+  text-transform:uppercase;
+  opacity:0.92;
+  margin-top:6px;
+  display:flex; gap:8px; flex-wrap:wrap;
+}
+.modal-close{
+  position:absolute; top:14px; right:14px;
+  width:32px; height:32px;
+  border-radius:50%;
+  border:none;
+  background:rgba(255,255,255,0.2);
+  color:#fff;
+  font-size:18px;
+  line-height:1;
+  cursor:pointer;
+}
+.modal-close:hover{background:rgba(255,255,255,0.32);}
+.modal-body{padding:18px;}
+.modal-section{margin-bottom:20px;}
+.modal-section:last-child{margin-bottom:0;}
+.modal-section h3{
+  font-family:"IBM Plex Mono",monospace;
+  font-size:11px;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+  color:var(--ink-soft);
+  margin:0 0 10px;
+  border-bottom:1px solid var(--border);
+  padding-bottom:6px;
+}
+.modal-section ul, .modal-section ol{
+  margin:0; padding-left:22px;
+  font-size:14px; line-height:1.6;
+}
+.modal-section ul{list-style:disc;}
+.modal-section li{margin-bottom:6px;}
+.modal-section li:last-child{margin-bottom:0;}
+.modal-section .step-num{
+  font-family:"IBM Plex Mono",monospace;
+  color:var(--ink-soft);
+  margin-right:6px;
+}
+.modal-card-ref{
+  font-size:12px;
+  color:var(--ink-soft);
+  margin-top:2px;
+}
+
+@media (max-width: 640px){
+  .modal-overlay{padding:0;}
+  .modal{max-width:100%; max-height:100%; height:100%; border-radius:0;}
 }
 .card-body{
   display:grid;
@@ -214,9 +316,9 @@ body{
   .field{border-left:none; padding:12px 14px;}
   .field:nth-child(2){border-top:1px solid var(--border);}
   .field .value{font-size:13.5px;}
-    .controls input[type="search"]{width:100%; font-size:16px; padding:11px 14px;}
+  .controls input[type="search"]{width:100%; font-size:16px; padding:11px 14px;}
 }
-  
+
 @media print{
   .topbar, .empty{display:none;}
   .grid{grid-template-columns:1fr 1fr; gap:10px; padding:0;}
@@ -238,6 +340,26 @@ body{
 
 <div class="grid" id="grid"></div>
 <div class="empty" id="empty" hidden>Nessuna ricetta trovata.</div>
+
+<div class="modal-overlay" id="modalOverlay" hidden>
+  <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalName">
+    <div class="modal-head" id="modalHead">
+      <button class="modal-close" id="modalClose" aria-label="Chiudi">✕</button>
+      <div class="name" id="modalName"></div>
+      <div class="meta" id="modalMeta"></div>
+    </div>
+    <div class="modal-body">
+      <div class="modal-section">
+        <h3>Ingredienti</h3>
+        <ul id="modalIngredients"></ul>
+      </div>
+      <div class="modal-section">
+        <h3>Procedimento</h3>
+        <ol id="modalSteps"></ol>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script>
 const RECIPES = [
@@ -742,6 +864,34 @@ const RECIPES = [
     {label:"Preparazione", value:"Cotto coperto a fuoco bassissimo 10 min, condito con aceto di riso ancora caldo"},
     {label:"Guarnizione", value:"—"},
   ]},
+{ name:"Tonno Piccante (Alga Fuori)", cat:"pesce", catLabel:"Pesce / Antipasti", porzioni:"1 roll (~6 pezzi)", tempo:"—",
+  fields:[
+    {label:"Base", value:"Alga nori all'esterno (non il riso)"},
+    {label:"Ingrediente principale", value:"Tonno rosso"},
+    {label:"Preparazione", value:"Ricoperto di maionese piccante"},
+    {label:"Guarnizione", value:"Erba cipollina"},
+  ]},
+{ name:"Salmon Siren Roll", cat:"pesce", catLabel:"Pesce / Antipasti", porzioni:"1 roll (~8 pezzi)", tempo:"—",
+  fields:[
+    {label:"Base", value:"—"},
+    {label:"Ingrediente principale", value:"Salmone piccante, avocado"},
+    {label:"Preparazione", value:"Salmone piccante e avocado all'interno; salmone a copertura, spennellato con olio al peperoncino"},
+    {label:"Guarnizione", value:"Crunch d'aglio piccante"},
+  ]},
+{ name:"Paint it Black Roll", cat:"pesce", catLabel:"Pesce / Antipasti", porzioni:"1 roll (~8 pezzi)", tempo:"15 min marinatura",
+  fields:[
+    {label:"Base", value:"Cipollotto"},
+    {label:"Ingrediente principale", value:"Tonno marinato in salsa di soia, avocado"},
+    {label:"Preparazione", value:"Tonno, avocado e cipollotto arrotolati all'interno; esterno interamente rivestito"},
+    {label:"Guarnizione", value:"Tobiko nero"},
+  ]},
+{ name:"Wild Thoughts Roll", cat:"pesce", catLabel:"Pesce / Antipasti", porzioni:"1 roll (~8 pezzi)", tempo:"—",
+  fields:[
+    {label:"Base", value:"—"},
+    {label:"Ingrediente principale", value:"Tonno piccante, avocado, cipolla fritta croccante"},
+    {label:"Preparazione", value:"Tonno piccante, avocado e cipolla croccante all'interno; salmone sopra"},
+    {label:"Guarnizione", value:"Maionese piccante, granella di tempura (tenkasu)"},
+  ]},
 
 // === ANTIPASTI (non di pesce) ===
 { name:"Enoki Fritti", cat:"antipasti", catLabel:"Antipasti", porzioni:"—", tempo:"—",
@@ -771,6 +921,34 @@ const RECIPES = [
     {label:"Ingrediente principale", value:"Speck, brie"},
     {label:"Preparazione", value:"Farciti in stampo da muffin, forno 180°C 20-25 min"},
     {label:"Guarnizione", value:"Marmellata di arance, rosmarino"},
+  ]},
+{ name:"Bruschetta al Lardo e Cappero", cat:"antipasti", catLabel:"Antipasti", porzioni:"4", tempo:"10 min",
+  fields:[
+    {label:"Base", value:"Pane casereccio abbrustolito"},
+    {label:"Ingrediente principale", value:"Lardo affettato sottile"},
+    {label:"Preparazione", value:"Maionese spalmata sul pane tostato, scalogno tritato finemente, lardo disposto sopra a coprire"},
+    {label:"Guarnizione", value:"Frutti di cappero a fette, pepe macinato"},
+  ]},
+{ name:"Bruschetta al Tonno e Cipolline", cat:"antipasti", catLabel:"Antipasti", porzioni:"4", tempo:"10 min",
+  fields:[
+    {label:"Base", value:"Pane casereccio abbrustolito"},
+    {label:"Ingrediente principale", value:"Tonno sott'olio sgocciolato, acciughe sminuzzate"},
+    {label:"Preparazione", value:"Maionese all'aglio spalmata sul pane, tonno e acciughe amalgamati insieme e distribuiti sopra"},
+    {label:"Guarnizione", value:"Cipolline sott'aceto a rondelle"},
+  ]},
+{ name:"Bruschetta alla Bottarga e Uova di Lompo", cat:"antipasti", catLabel:"Antipasti", porzioni:"4", tempo:"10 min",
+  fields:[
+    {label:"Base", value:"Pane casereccio abbrustolito"},
+    {label:"Ingrediente principale", value:"Burro salato, pasta d'aglio"},
+    {label:"Preparazione", value:"Burro e pasta d'aglio spalmati sul pane ancora caldo, fino a sciogliersi leggermente"},
+    {label:"Guarnizione", value:"Uova di lompo rosse, erba cipollina tritata, bottarga grattugiata"},
+  ]},
+{ name:"Bruschetta alle Acciughe e Sardine", cat:"antipasti", catLabel:"Antipasti", porzioni:"4", tempo:"10 min",
+  fields:[
+    {label:"Base", value:"Pane casereccio abbrustolito"},
+    {label:"Ingrediente principale", value:"Burro morbido mischiato con pasta di acciughe"},
+    {label:"Preparazione", value:"Burro alle acciughe spalmato sul pane, pomodorini a cubetti e sardine sott'olio sgocciolate disposte sopra"},
+    {label:"Guarnizione", value:"Katsuobushi, erba cipollina tritata"},
   ]},
 
 // === DOLCI ===
@@ -1072,6 +1250,13 @@ const RECIPES = [
     {label:"Cottura", value:"Marinatura a freddo, riposo in frigo almeno 24h"},
     {label:"Finitura", value:"Buccia di arancia e limone, pepe rosa"},
   ]},
+{ name:"Contorno Estivo", cat:"contorni", catLabel:"Contorni", porzioni:"4", tempo:"~20 min",
+  fields:[
+    {label:"Base", value:"—"},
+    {label:"Ingredienti", value:"Fagiolini, patate, ceci"},
+    {label:"Cottura", value:"Fagiolini e patate lessati, ceci lessati"},
+    {label:"Finitura", value:"Pesto, semi di sesamo"},
+  ]},
 
 // === BEVANDE ===
 { name:"Kentucky Mule", cat:"bevande", catLabel:"Bevande", porzioni:"1", tempo:"—",
@@ -1297,6 +1482,3169 @@ const RECIPES = [
     {label:"Uso", value:"Paprika e sesamo tostato a finire"},
   ]},
 ];
+const FULL_RECIPES = {
+ "Zuppa Agropiccante": {
+  "ingredients": [
+   "0.5  Carota",
+   "1  champignon",
+   "4  Funghi shiitake",
+   "120 g coscia di pollo disossata o lonza maiale",
+   "120 g Tofu morbido",
+   "8 Cucchiaino Salsa di soia scura",
+   "8 Cucchiaino Aceto di riso",
+   "Sale qb",
+   "4 Cucchiaino Fecola di patate",
+   "Acqua",
+   "1  Peperoncino fresco",
+   "[PER GUARNIRE]",
+   "4 Cucchiaino Olio di semi di sesamo",
+   "40 g Cipollotto",
+   "Tuorlo freschissimo o marinato"
+  ],
+  "steps": [
+   "Per preparare la ricetta della zuppa agropiccante, mettere a bagno i funghi shiitake per circa tre ore.",
+   "Cuocere il pollo in padella, quindi ridurlo a straccetti sfilacciandolo.",
+   "Scolare e affettare i funghi.",
+   "Sbucciare e tagliare a striscioline le carote.",
+   "Sciogliere la fecola di patate con un po' d'acqua.",
+   "Tritare il peperoncino, ma prima privarlo dei semi.",
+   "Mettere un litro di acqua nella wok, aggiungere l'aceto di riso e le due salse di soia.",
+   "Aggiungere i funghi e il pollo e cuocere per 5 minuti.",
+   "Aggiungere il tofu a pezzetti, le carote, il peperoncino e l'acqua con la fecola e cuocere altri 5 minuti.",
+   "Servire subito decorando con i cipollotti freschi affettati e un cucchiaino di olio."
+  ]
+ },
+ "Vellutata di Asparagi e Patate con Crostini": {
+  "ingredients": [
+   "[Vellutata]",
+   "Asparagi puliti 800 g",
+   "Patate 300 g",
+   "Brodo vegetale 1 l",
+   "Panna fresca liquida 250 ml",
+   "Vino bianco 200 ml",
+   "Burro 30 g",
+   "Olio extravergine d'oliva 2 cucchiai",
+   "Erba cipollina q.b.",
+   "Scalogno 1",
+   "Sale fino q.b.",
+   "Pepe nero q.b.",
+   "[Per I Crostini]",
+   "Pancarrè 8 fette",
+   "Olio di semi"
+  ],
+  "steps": [
+   "Per preparare la vellutata di asparagi e patate con crostini, pelate le patate, lavatele e riducetele a cubetti piuttosto piccoli. Lavate gli asparagi sotto acqua corrente, in modo da eliminare ogni residuo di terra. Eliminate la parte inferiore degli asparagi, più bianca e fibrosa. Separate i gambi degli asparagi dalle cime, che terrete da parte.",
+   "Tagliate i gambi degli asparagi a piccole rondelle mentre sbollentate in poca acqua bollente salata le cime degli asparagi, che dovranno risultare al dente; scolatele e lasciatele in un colino a raffreddare e a perdere l’acqua di cottura. Tenetele per la decorazione finale della vellutata.",
+   "Sbucciate lo scalogno e tagliatelo a fette sottili, che farete appassire a fuoco moderato in una casseruola capiente insieme all’olio extravergine di oliva e al burro. Unite poi le patate a cubetti e gli asparagi a rondelle e fateli soffriggere per 7-8 minuti a fuoco medio, mescolando di tanto in tanto con un cucchiaio di legno, così che le verdure non attacchino al fondo.",
+   "Sfumate poi con il vino  bianco e, quando sarà evaporato, coprite gli ingredienti con il brodo vegetale ben caldo e fate cuocere per circa 20 minuti a fuoco dolce, fino a che le verdure non saranno ben tenere.",
+   "A questo punto, aggiungete la panna e lasciate cuocere per altri 10 minuti.",
+   "Insaporite con del pepe bianco macinato fresco a piacere e aggiustate, se necessario, di sale.",
+   "Una volta cotto, trasferite il composto di asparagi e patate in una ciotola e, utilizzando un frullatore ad immersione, riducete in una crema; se la vellutata dovesse risultare troppo densa diluitela con un po’ di brodo vegetale caldo.",
+   "Preparate intanto i crostini, eliminando la parte scura ai lati delle fette di pancarrè e tagliando le fette in striscioline e successivamente a quadratini piuttosto piccoli, circa 1,5 cm di lato.",
+   "Fate scaldare sul fuoco una padella piena d'olio e poi versatevi all’interno i pezzi di pancarrè; friggeteli per un minuto.",
+   "Riportate la vellutata di asparagi e patate sul fuoco e unite l'erba cipollina tritata.",
+   "Aggiungete anche le punte di asparagi sbollentate in precedenza, disponendone qualcuno in superficie, infine aggiungete i crostini ed ecco pronta la vostra vellutata di asparagi e patate con crostini!"
+  ]
+ },
+ "Vellutata di Cipolle": {
+  "ingredients": [
+   "1 kg cipolle",
+   "Olio q.b.",
+   "1 cuc fecola",
+   "Parmigiano q.b.",
+   "1 L acqua",
+   "Sale q.b.",
+   "Pepe q.b."
+  ],
+  "steps": [
+   "Tagliare le cipolle grossolanamente, metterle in una pentola e farle appassire con un filo d’olio a fuoco basso per circa 20 minuti coperto.",
+   "Frullare le cipolle con il minipimer. Sciogliere la fecola e il sale nell’acqua a temperatura ambiente, poi unirla alle cipolle.",
+   "Portare a ebollizione e lasciar cuocere per 15 minuti mescolando continuamente.",
+   "Servire con un filo d’olio, sale, pepe e parmigiano grattugiato."
+  ]
+ },
+ "Zuppa di Cipolle": {
+  "ingredients": [
+   "Cipolle dorate 1000g",
+   "Farina 50g",
+   "Brodo vegetale 500g",
+   "Alloro q.b.",
+   "Sale q.b.",
+   "Pepe q.b.",
+   "Emmental q.b.",
+   "Burro q.b."
+  ],
+  "steps": [
+   "Sbucciate le cipolle e tagliatele finemente a coltello",
+   "Fatele rosolare in padella con moderato burro fino a farle appassire leggermente",
+   "Per insaporirle bene, aggiungete sale e alloro",
+   "Versate la farina sulle cipolle e mescolate bene con un mestolo, facendo cuocere per qualche minuto",
+   "Una volta imbrunite, aggiungiamo il brodo e lasciamo cuocere per 20 minuti",
+   "Versate il tutto in delle cocotte",
+   "Mettiamo delle fette di pane in forno a 180°C per 10 minuti, con olio e sale, fino a renderle croccanti e, una volta pronte, ricoprite le cocotte col pane e dell' emmental grattugiato grossolanamente",
+   "Inforniamo il tutto a 180°C per 10 minuti"
+  ]
+ },
+ "Zuppa di Funghi e Patate": {
+  "ingredients": [
+   "400 g funghi",
+   "2 patate",
+   "1 L brodo",
+   "2 scalogni",
+   "Olio q.b.",
+   "Prezzemolo q.b.",
+   "Sale q.b.",
+   "Pepe q.b."
+  ],
+  "steps": [
+   "Pulire i funghi e tagliarli a pezzetti.",
+   "Sbucciare le patate e lasciarle immerse nell’acqua dopo averle tagliate a fette molto sottili.",
+   "Affettare gli scalogni finissimi.",
+   "Scaldare l’olio in una casseruola e far appassire gli scalogni a fuoco molto basso.",
+   "Dopo qualche minuto aggiungere i funghi, alzare la fiamma e aggiungere sale e pepe.",
+   "Quando i funghi sono quasi del tutto asciutti, versare nella casseruola il brodo caldo e le patate scolate.",
+   "Far bollire la zuppa semicoperta per circa 30 minuti.",
+   "A fine cottura regolare di sale e aggiungere il prezzemolo tritato."
+  ]
+ },
+ "Zuppa di Miso": {
+  "ingredients": [
+   "2 tazze acqua",
+   "2 cuc miso",
+   "2 pezzetti konbu",
+   "Erba cipollina q.b."
+  ],
+  "steps": [
+   "Tagliuzzare l’alga e metterla a bagno nell’acqua per 10 minuti.",
+   "Nel frattempo tritare l’erba cipollina.",
+   "Portare a ebollizione l’acqua con l’alga e l’erba cipollina, spegnere il fuoco quando inizia a bollire, rimuovere la konbu e aggiungere il miso sciolto in poca acqua calda.",
+   "Lasciar riposare 5 minuti e servire."
+  ]
+ },
+ "Crema di Zucca con Caprino": {
+  "ingredients": [
+   "[Per la crema]",
+   "1zucca delica grande",
+   "2 patate medie",
+   "Zenzero (un pezzo grande quanto un tappo di spumante)",
+   "2 spicchi d'aglio",
+   "finocchio carota cipolla",
+   "noce moscata",
+   "Sale, pepe, peperoncino, olio, timo",
+   "[Per completare il piatto]",
+   "Caprino fresco (circa 150 g)",
+   "Olio extravergine d'oliva",
+   "Sale e pepe nero",
+   "Un goccio di latte",
+   "Timo fresco",
+   "Scorza di limone grattugiata (opzionale)",
+   "Cavolo nero saltato"
+  ],
+  "steps": [
+   "Tagliate la zucca Fate a pezzi le patate.",
+   "Preparate il soffritto tritando bene aglio e zenzero, fate andare qualche minuto a fiamma dolce con anche il finocchio la cipolla e la carota",
+   "Alzate la fiamma e aggiungete la zucca e le patate coprite con brodo e fate cuocere con coperchio per altri 20/25 minuti.",
+   "Frullate la zucca con olio a filo, aggiungendo peperoncino, abbondante noce moscata ed eventuali erbe aromatiche a piacere.",
+   "Nel frattempo, schiacciate il caprino con un filo d'olio, sale, pepe, un goccio di latte, timo fresco e scorza di limone grattugiata se vi piace un tocco agrumato.",
+   "Impiattate la crema di zucca con cucchiaiate di caprino aromatizzato, un po' di peperoncino e cavolo nero saltato"
+  ]
+ },
+ "Minestrone di Verdure Low-Carb": {
+  "ingredients": [
+   "2 cucchiai di olio d'oliva",
+   "1 cipolla grande, tritata",
+   "2 spicchi d'aglio, tritati",
+   "2 carote grandi, tagliate a cubetti",
+   "1 gambo di sedano, tagliato a cubetti",
+   "1 zucchina, tagliata a cubetti",
+   "1 tazza di fagioli",
+   "1 tazza di pomodori pelati, tagliati a cubetti",
+   "4 tazze di brodo di verdure",
+   "1 cucchiaino di concentrato di pomodoro",
+   "1 cucchiaino di timo secco",
+   "1 cucchiaino di basilico secco",
+   "1 cucchiaino di origano secco",
+   "Sale e pepe q.b."
+  ],
+  "steps": [
+   "In una pentola capiente, scalda l'olio d'oliva a fuoco medio e cuoci la cipolla e l'aglio finché non sono morbidi.",
+   "Aggiungi le carote, il sedano, la zucchina e i fagiolini e cuoci per altri 5 minuti.",
+   "Aggiungi i pomodori, il brodo di verdure, il concentrato di pomodoro e le spezie e mescola bene.",
+   "Copri la pentola e cuoci a fuoco basso per circa 30 minuti, o finché le verdure non sono tenere. Aggiusta di sale e pepe a piacere."
+  ]
+ },
+ "Zuppa Piccante di Frutti di Mare": {
+  "ingredients": [
+   "2 gamberoni",
+   "2 filetti puliti di anguilla",
+   "4 vongole giganti (pen shell)",
+   "60g calamari",
+   "2 cozze giganti",
+   "vongole asari",
+   "1/2 pannocchia mini",
+   "1/4 cespo bok choy (cavolo cinese)",
+   "450ml dashi",
+   "1 filetto branzino tagliato a pezzetti",
+   "2 cuc. salsa di soia leggera",
+   "1/4 cuc.no sale marino",
+   "2 cuc. sakè",
+   "1 cuc.no salsa chili all'aglio",
+   "coriandolo per guarnire"
+  ],
+  "steps": [
+   "Eliminare il filo intestinale dei gamberoni con la punta di un coltello. versarvi sopra dell'acqua bollente per darvi un po' di colore.",
+   "Immergere l'anguilla in acqua bollente, scolare immediatamente e immergerla in acqua gelata.",
+   "Tagliare le vongole giganti e i calamari a fettine sottili.",
+   "Lavare bene cozze e vongole.",
+   "Sbollentare la pannocchia e il cavolo.",
+   "Versare il dashi in un tegame e aggiungere tutti gli ingredienti. Portare a ebollizione.",
+   "Quando i gusci si aprono, aggiungere soia, sale marino e sakè. Assaggiare e spegnere il fuoco.",
+   "Aggiungere infine la salsa chili.",
+   "Trasferire in piatti da zuppa e guarnire con il coriandolo."
+  ]
+ },
+ "Ramen al Salmone": {
+  "ingredients": [
+   "1 L acqua",
+   "350 mL fumetto di pesce",
+   "2 cuc. fiocchi di dashi di pesce",
+   "2 cuc. mirin",
+   "1 pezzetto alga kombu",
+   "2 tranci salmone",
+   "100 g germogli di radicchio rosso",
+   "1 uovo semi-sodo marinato",
+   "1/2 porro",
+   "q.b. salsa di soia",
+   "180 g tagliolini freschi"
+  ],
+  "steps": [
+   "Mettere in infusione fredda l'alga kombu nell'acqua per 30 min.",
+   "Aggiungere il fumetto, il mirin e il dashi essiccato, portare a bollore, quindi rimuovere l'alga.",
+   "Mantenere il brodo caldo mentre si prepara il resto degli ingredienti",
+   "Cuocere i tagliolini in acqua salata, insieme al porro tagliato a rondelle sottili.",
+   "Nel frattempo scottare i tranci di salmone in padella.",
+   "Scolare i tagliolini e il porro.",
+   "Versare il brodo nelle ciotole da ramen, con un cucchiaio di salsa di soia.",
+   "Aggiungere i tagliolini, il salmone, mezzo uovo marinato e i germogli ben lavati."
+  ]
+ },
+ "Zuppa di Pesce": {
+  "ingredients": [
+   "800 g pesce da brodo o scarti di tonno fresco",
+   "200 g pasta all'uovo",
+   "1 cipolla rossa",
+   "2 spicchi d'aglio",
+   "1 carota piccola",
+   "1 costa di sedano",
+   "1 cuc. concentrato di pomodoro",
+   "1 cuc.no semi di finocchio",
+   "1.cuc.no semi di cumino",
+   "q.b. peperoncino",
+   "q.b. prezzemolo",
+   "q.b. olio di oliva",
+   "q.b. sale grosso",
+   "q.b. pepe nero macinato",
+   "q.b. acqua"
+  ],
+  "steps": [
+   "Tagliare a cubotti la carota e il sedano, pulire la cipolla e l'aglio e sminuzzarli grossolanamente.",
+   "In una pentola bassa e larga preparare un soffritto con le verdure, i semi di finocchio, il cumino e il peperoncino, lasciar sfrigolare pochi secondi e aggiungere il concentrato.",
+   "Versare acqua fino a metàpentola e portare a bollore.",
+   "Unire il pesce, salare e pepare.",
+   "Cuocere per 15 minuti a fuoco dolce.",
+   "Togliere il pesce dal brodo e rimuoverne la polpa.",
+   "Rimettere gli scarti nel brodo e lasciar cuocere per 20-30 minuti.",
+   "Filtrare il brodo, rimetterlo sul fuoco e cuocervi la pasta Regolare di sale e pepe e cospargere di prezzemolo"
+  ]
+ },
+ "Zuppa di Fagioli Piccante": {
+  "ingredients": [
+   "200g passata pomodoro",
+   "Olio qb",
+   "2 spicchi aglio",
+   "2 Cipollotti",
+   "200g fagioli in scatola",
+   "1 peperoncino fresco",
+   "Peperoncino in scaglie qb",
+   "1 bottiglia Birra",
+   "Qb worchestershire sauce",
+   "Qb salsa di soia"
+  ],
+  "steps": [
+   "Tagliare le verdure a tocchetti e farle rosolare insieme al peperoncino in scaglie nell'olio.",
+   "Aggiungere la passata",
+   "Aggiungere i fagioli scolati",
+   "Aggiungere la birra",
+   "Lasciar cuocere una mezz'ora"
+  ]
+ },
+ "Ramen Vegetariano Autunnale": {
+  "ingredients": [
+   "Brodo di verdure",
+   "Miso",
+   "Cavolo nero tagliato a listarelle",
+   "Funghi a cubotti",
+   "Kimchi",
+   "Udon o noodles"
+  ],
+  "steps": [
+   "Preparare il brodo di verdure.",
+   "Nel frattempo saltare in una padella oliata i funghi insieme al cavolo nero",
+   "Filtrare il brodo e cuocervi i noodle",
+   "Preparare il fondo delle ciotole con un cucchiaio di miso e un mestolo di brodo",
+   "Aggiungere i noodle e mescolare, quindi aggiungere le verdure e il brodo",
+   "Infine aggiungere il kimchi"
+  ]
+ },
+ "Risotto Zafferano, Taleggio e Salsiccia": {
+  "ingredients": [
+   "-250g di salsiccia",
+   "-150g di taleggio",
+   "-60g di parmigiano",
+   "-noce di burro",
+   "-2bustine di zafferano",
+   "-vino bianco",
+   "-brodo vegetale",
+   "-mezza cipolla"
+  ],
+  "steps": [
+   "-fai rosolare la salsiccia in pentola",
+   "-taglia il taleggio",
+   "-trita la cipolla fine",
+   "-una volta che la salsiccia e bella croccante toglila dalla pentola e fai rosolare la cipolla aggiungi poi il riso e tosta",
+   "-sfuma con vino bianco appena sarà evaporato porta a cottura con il brodo vegetale",
+   "-aggiungi e fine cottura salsiccia e zafferano",
+   "-manteca energicamente con burro freddo parmigiano e taleggio"
+  ]
+ },
+ "Pasta con Sugo Cremoso alla Feta": {
+  "ingredients": [
+   "Pomodori ciliegini",
+   "Formaggio feta",
+   "Aglio",
+   "Scalogno",
+   "Rosmarino",
+   "Timo",
+   "Sale",
+   "Olio extravergine di oliva",
+   "Olive"
+  ],
+  "steps": [
+   "In una teglia da forno, aggiungere i pomodori, la testa d'aglio tritata, lo scalogno tagliato a metà, il rosmarino e il timo, l'olio e il sale.",
+   "Infornare a 180° per circa 20-30 minuti.",
+   "Eliminare il rosmarino e il timo, le bucce della cipolla e dell'aglio e passare il tutto fino a formare una salsa cremosa.",
+   "Cuocere la pasta.",
+   "In una ciotola, aggiungere la pasta cotta, la salsa e le olive.",
+   "Guarnire con timo fresco e un po' di pepe."
+  ]
+ },
+ "Spaghetti con Crema di Cavolfiore e Panure Croccante": {
+  "ingredients": [
+   "180g Spaghetti integrali",
+   "300g cavolfiore",
+   "1 spicchio d'aglio",
+   "1 peperoncino secco",
+   "olio evo q.b.",
+   "sale q.b.",
+   "pepe q.b.",
+   "30g pangrattato integrale",
+   "10g pomodoro secco",
+   "zest di limone q.b.",
+   "timo fresco q.b. (opzionale)"
+  ],
+  "steps": [
+   "affettare il cavolfiore e saltarlo in padella con olio, aglio e peperoncino.",
+   "dopo un paio di minuti rimuovere l'aglio e coprire con l'acqua di cottura della pasta, lasciar cuocere coperto",
+   "preparare la panure con pan grattato e il pomodoro secco tritato alla fine della cottura aggiungere la scorza di limone",
+   "frullare il cavolfiore",
+   "saltare gli spaghetti nella crema di cavolfiore",
+   "servire spolverando con la panure e qualche foglia di timo"
+  ]
+ },
+ "Pasta alla Zozzona": {
+  "ingredients": [
+   "500 g di rigatoni",
+   "1 uovo intero",
+   "4 tuorli",
+   "3 fette di guanciale",
+   "3 salsicce",
+   "1 cipolla",
+   "300gr di passata di pomodoro",
+   "Sale e pepe qb",
+   "100gr di Pecorino romano"
+  ],
+  "steps": [
+   "Fai rosolare la salsiccia e il guanciale, scola il grasso e tieni da parte",
+   "Fai soffritto, aggiungi la passata",
+   "in una ciotola rompi l'uovo e aggiungi i tuorli, il pepe e il formaggio",
+   "Aggiungi la carne al sugo di pomodoro",
+   "Cuoci e scola la pasta al dente",
+   "porta a cottura in padella con un po' d'acqua di cottura",
+   "A fine cottura aggiungi la crema d'uovo"
+  ]
+ },
+ "Lasagne Vegetariane": {
+  "ingredients": [
+   "200 g lasagne",
+   "150 g zucchine",
+   "150 g cavolfiore",
+   "100 g Pomodori Ciliegini",
+   "100 g porro",
+   "50 g carote",
+   "Prezzemolo q.b.",
+   "Olio q.b.",
+   "[BESCIAMELLA]",
+   "500 g latte",
+   "50 g farina",
+   "50 g burro",
+   "30 g parmigiano"
+  ],
+  "steps": [
+   "Lavare e tritare il porro, stufarlo con poco olio, sale e pepe.",
+   "Unire le zucchine tagliate a tocchetti, le carote tritate e il cavolfiore a pezzettini.",
+   "Lasciar insaporire qualche minuto mescolando, coprire con acqua calda e lasciar cuocere finché le verdure diventano tenere.",
+   "Nel frattempo prepara la besciamella.",
+   "Frullare le verdure con 1 cuc. di olio e poco prezzemolo tritato.",
+   "Imburrare una teglia, coprire il fondo e i lati di besciamella e continuare con gli strati come per la lasagna classica, tenendo come ultimo strato le verdure e la besciamella.",
+   "Infornare a 180° per 20-25 minuti.",
+   "Lasciar riposare circa 10 minuti, guarnire con i pomodorini tagliati a spicchi, un filo d’olio e prezzemolo tritato."
+  ]
+ },
+ "Pasta Gratinata alle Noci": {
+  "ingredients": [
+   "40 g noci sgusciate",
+   "320 g pasta corta",
+   "300 ml besciamella",
+   "20 g parmigiano"
+  ],
+  "steps": [
+   "Mettere le noci in un mortaio e pestarle grossolanamente.",
+   "Cuocere la pasta e preparare la besciamella.",
+   "Quando la pasta è cotta metterla in una ciotola con metà della besciamella.",
+   "Imburrare una teglia e versarvi uno strato di pasta, una manciata di noci e un po’ di besciamella a filo.",
+   "Alternare gli ingredienti finché sono finiti.",
+   "Cospargere la superficie con il formaggio grattugiato e infornare per 10 minuti a 180°."
+  ]
+ },
+ "Pennette Incazzate": {
+  "ingredients": [
+   "200g Pennette",
+   "150g pomodorini ciliegia",
+   "2 spicchi Aglio",
+   "1 cucchiaio peperoncino",
+   "Olio q.b.",
+   "Origano q.b."
+  ],
+  "steps": [
+   "Tagliare i pomodorini a metà o in quarti a seconda della dimensione.",
+   "In una padella, fare scaldare a fuoco medio l'olio con l'aglio intero e il peperoncino.",
+   "Dopo un minuto aggiungere i pomodorini e abbassare le fiamma.",
+   "Lasciar cuocere per 10 minuti mescolando di frequente.",
+   "Una volta pronto il sughetto, aggiungere due cucchiai di acqua di cottura delle pennette, quindi mescolare bene.",
+   "Aggiungere le pennette scolate e fare saltare a fuoco alto per un paio di minuti.",
+   "Servire con una spolverata di origano"
+  ]
+ },
+ "Pesto di Zucchine": {
+  "ingredients": [
+   "2 zucchine",
+   "Q.b. olio evo",
+   "1 cuc. Pinoli",
+   "1 cuc. Granella di nocciole tostate",
+   "80 g feta",
+   "Foglie di basilico a piacere",
+   "2 spicchi aglio"
+  ],
+  "steps": [
+   "Saltare le zucchine in padella con un po' d'olio e l'aglio intero. Salare e pepare.",
+   "Una volta che sono tenere, scolarle del liquido di cottura e porle in un mixer insieme agli altri ingredienti.",
+   "Mischiare aggiungendo dell'altro olio all'occorrenza per rendere il pesto cremoso."
+  ]
+ },
+ "Ragù con Costine": {
+  "ingredients": [
+   "1 costa di sedano",
+   "Mezza carota",
+   "1 porro",
+   "1 spicchio aglio",
+   "800g macinato misto",
+   "3 costine di maiale",
+   "Vino bianco q.b.",
+   "Burro",
+   "1 barattolo passata",
+   "Concentrato q.b.",
+   "3l acqua",
+   "40g latte"
+  ],
+  "steps": [
+   "Pulire le verdure e tagliarle a dadini. Metterle a rosolare nella pentola insieme al burro fuso e all’aglio.",
+   "Quando il trito risulta appassito e il fondo asciutto, aggiungere la carne macinata.",
+   "Nel frattempo bollire le costine fino a che perdono un po’ di grasso.",
+   "Quando la carne si è rosolata per bene, coprire il tutto con il vino. Far evaporare mescolando, fino a che il fondo non è di nuovo asciutto.",
+   "Aggiungere la passata, il concentrato a piacere, mescolare e unire 1L di acqua. Unire le costolette, regolare di sale e lasciar cuocere a fiamma medio alta per 1 ora, mescolando ogni tanto.",
+   "Trascorsa la prima ora aggiungere il secondo litro d’acqua e proseguire la cottura per un’altra ora. Ripetere al termine della seconda ora, facendo cuocere per un’altra ora.",
+   "A fine cottura dovrà risultare ben asciutto, regolare di sale e di pepe, aggiungere il latte e spegnere la fiamma"
+  ]
+ },
+ "Ravioli al Vapore": {
+  "ingredients": [
+   "[IMPASTO]",
+   "200 g farina",
+   "100 ml acqua",
+   "1 pizzico sale",
+   "[RIPIENO]",
+   "200 g carne macinata di maiale",
+   "1 carota",
+   "1/2 porro",
+   "100 g verza",
+   "2 cuc. salsa di soia",
+   "zenzero q.b."
+  ],
+  "steps": [
+   "Disporre la farina a fontana in una ciotola e aggiungere un pizzico di sale, poi aggiungere l'acqua.",
+   "Lavorare l'impasto fino ad ottenere un panetto sodo.",
+   "Avvolgere nella pellicola e far riposare un'ora",
+   "Lavare e tagliare a pezzetti il porro, la verza e la carota",
+   "Mettere tutto in un mixer e tritare finemente",
+   "Mettere le verdure tritate in una ciotola con la carne macinata poi aggiungere lo zenzero tritato e la salsa di soia",
+   "Mescolare tutto per formare un impasto omogeneo",
+   "Saltare in padella o in una wok fino a che la carne risulta ben rosolata.",
+   "Riprendere la pasta, stenderla su un piano e ricavare dei cerchi con un taglia pasta.",
+   "Spianare ancora un po' ogni cerchio, poi mettere al centro un cucchiaio abbondante di ripieno.",
+   "Chiudere il raviolo a mezzaluna premendo sui bordi per fare aderire la pasta.",
+   "Quindi con i polpastrelli inumiditi fare delle piccole pieghe da un'estremità all'altra del raviolo.",
+   "Foderare il cesto della vaporiera con delle foglie di verza e porvi sopra i ravioli.",
+   "Cuocere a vapore per circa 15 minuti",
+   "Non appena la superficie dei ravioli sarà leggermente trasparente, saranno pronti."
+  ]
+ },
+ "Risotto agli Asparagi": {
+  "ingredients": [
+   "160 g riso",
+   "250 g asparagi",
+   "1 L brodo",
+   "Olio q.b.",
+   "Parmigiano q.b.",
+   "1 scalogno"
+  ],
+  "steps": [
+   "Lavare e rimuovi le punte e affettare il gambo molto finemente.",
+   "Scaldare il brodo, mettere in pentola l’olio, lo scalogno tritato finissimo e far dorare con un po’ di brodo.",
+   "Unire gli asparagi e lasciar insaporire un paio di minuti a fuoco alto.",
+   "Aggiungere un mestolo di brodo e far cuocere 5 minuti coperto a fuoco basso.",
+   "Scoperchiare, alzare la fiamma, far asciugare l’eccesso, rimuovere le punte e tenerle da parte.",
+   "Aggiungere il riso e proseguire la cottura del risotto",
+   "normalmente.",
+   "2 minuti prima che il risotto sia pronto rimettere le punte, mescolando continuamente fino a fine cottura."
+  ]
+ },
+ "Risotto al Radicchio Rosso": {
+  "ingredients": [
+   "160 g riso",
+   "1 cespo radicchio rosso",
+   "1 L brodo",
+   "1 cuc olio",
+   "1 scalogno",
+   "50 ml vino bianco",
+   "Pepe nero",
+   "20 g parmigiano"
+  ],
+  "steps": [
+   "Pulire il radicchio e affettarlo grossolanamente, lavarlo e asciugarlo con la centrifuga.",
+   "Tritarlo grossolanamente.",
+   "Scaldare il brodo.",
+   "Far soffriggere lo scalogno tritato a fuoco basso, quando è dorato aggiungere il radicchio, il riso e prosegui la cottura normalmente."
+  ]
+ },
+ "Risotto Zafferano e Funghi": {
+  "ingredients": [
+   "1 l brodo",
+   "Burro q.b.",
+   "1 cipolla bianca",
+   "1 pizzico zafferano",
+   "Grana q.b.",
+   "350 g Riso arborio",
+   "400 g funghi",
+   "1 spicchio d’aglio",
+   "Prezzemolo q.b.",
+   "1 bic vino bianco",
+   "Olio q.b."
+  ],
+  "steps": [
+   "Far imbiondire l’aglio schiacciato in padella con l’olio.",
+   "Aggiungere i funghi e cuocere qualche minuto a fuoco medio mescolando spesso.",
+   "Verso fine cottura aggiungere abbondante prezzemolo tritato e lasciar cuocere 5 minuti a fiamma bassa.",
+   "Quando sono pronti metterli da parte e preparare il risotto normalmente.",
+   "A metà cottura aggiungere lo zafferano.",
+   "Verso fine cottura aggiungere i funghi e mescolare.",
+   "Appena il riso è cotto, spegnere il fuoco e far mantecare con il burro e il grana."
+  ]
+ },
+ "Spaghetti Aglio, Olio e Peperoncino alla Sicula": {
+  "ingredients": [
+   "160g spaghetti",
+   "1 spicchio aglio",
+   "1 peperoncino rosso piccolo",
+   "4 rametti prezzemolo",
+   "2 cuc olio EVO"
+  ],
+  "steps": [
+   "Lavare il prezzemolo e tritare le foglie insieme all’aglio.",
+   "Spezzettare finemente il peperoncino.",
+   "In una padella far dorare dolcemente il trito a fiamma media.",
+   "Spegnere la fiamma prima che l’aglio imbrunisca.",
+   "Cuocere gli spaghetti, scolarli, e farli saltare a fiamma vivace con il condimento."
+  ]
+ },
+ "Spaghetti al Rosmarino": {
+  "ingredients": [
+   "180 g spaghetti",
+   "1 rametto di rosmarino",
+   "1 spicchio d’aglio",
+   "Passata",
+   "Peperoncino q.b.",
+   "Olio q.b."
+  ],
+  "steps": [
+   "Lavare e tritare molto finemente il rosmarino.",
+   "Metterlo in padella con olio caldo, l’aglio tritato e peperoncino a piacere e far insaporire.",
+   "Aggiungere i pelati, mescolare e cuocere per 20 minuti.",
+   "Cuocere gli spaghetti, scolarli al dente e farli saltare qualche minuto con il sugo a fiamma vivace."
+  ]
+ },
+ "Spaghetti alla Salsiccia": {
+  "ingredients": [
+   "200 g spaghetti",
+   "Pomodori s. marzano",
+   "20 g pecorino",
+   "40 g parmigiano",
+   "1 bic. Vino",
+   "Burro q.b.",
+   "Olio q.b.",
+   "150 g salsiccia",
+   "1 mestolo passata",
+   "Sale q.b.",
+   "Pepe q.b."
+  ],
+  "steps": [
+   "Togliere il budello alla salsiccia e tagliarla a pezzetti.",
+   "Mettere olio e salsiccia in una padella, salare e pepare, far rosolare e bagnare con il vino.",
+   "Far evaporare il vino cuocendo a fiamma moderata, aggiungere i pomodori tagliati a filetti e un mestolo di passata.",
+   "Cuocere gli spaghetti, scolarli e saltarli con il sugo.",
+   "Aggiungere un mestolo di acqua di cottura. Quando sono pronti far manticare con il burro e i formaggi grattuggiati per 5 min.",
+   "Far saltare ancora e servire bollenti."
+  ]
+ },
+ "Sugo di Fegato": {
+  "ingredients": [
+   "150 g fegato",
+   "1 noce di burro",
+   "1 rametto rosmarino",
+   "3 cuc. olio",
+   "2 foglie di salvia",
+   "2 bic. vino rosso",
+   "q.b. noce moscata"
+  ],
+  "steps": [
+   "Sminuzzare il fegato, metterlo in un tegame con il burro, 2 cucchiai di olio, la noce moscata, il rametto di rosmarino e la salvia.",
+   "Far rosolare per qualche minuto.",
+   "Aggiungere il vino, lasciar sfumare a fuoco lento finché sarà evaporato completamente.",
+   "Togliere dal fuoco, aggiungere un cucchiaio d'olio e mescolare.",
+   "Saltare con la pasta cotta al dente e abbondante parmigiano."
+  ]
+ },
+ "Tagliatelle ai Quattro Formaggi": {
+  "ingredients": [
+   "200 g tagliatelle",
+   "100 g parmigiano",
+   "50 g taleggio",
+   "80 g gorgonzola",
+   "200 mL latte",
+   "50 g emmenthal",
+   "25 mL panna"
+  ],
+  "steps": [
+   "Grattugiare l’emmenthal e il parmigiano, tagliare il taleggio e il gorgonzola a cubetti.",
+   "Far sciogliere la panna nel latte in un pentolino senza farla bollire.",
+   "Quando sarà calda unire i formaggi a cubetti, l’emmenthal e metà del parmigiano.",
+   "Lasciare il sugo sul fuoco a fiamma bassa finchè non si sono sciolti tutti i formaggi.",
+   "Quando la pasta è pronta unirla al sugo, versarla in una pirofila, coprirla con il parmigiano restante e informare 5 min a forno caldo."
+  ]
+ },
+ "Tagliatelle con Funghi": {
+  "ingredients": [
+   "1/2 cipolla",
+   "1 spicchio d’aglio",
+   "30 g burro",
+   "20 g porcini",
+   "1 dado da brodo",
+   "Pepe q.b.",
+   "160 g tagliatelle",
+   "Prezzemolo q.b."
+  ],
+  "steps": [
+   "Far soffriggere la cipolla tritata con l’aglio nel burro fuso.",
+   "Una volta che sono dorati aggiungere i funghi puliti e tagliati a fettine, spolverare con il pepe e aggiungere un dado da brodo sciolto in poca acqua calda.",
+   "Proseguire la cottura per circa 30 minuti.",
+   "Cuocere le tagliatelle, scolarle e unirle al sugo.",
+   "Servire spolverando con prezzemolo fresco tritato."
+  ]
+ },
+ "Spaghetti con Cavolo Nero e Burrata": {
+  "ingredients": [
+   "cavolo nero",
+   "olio evo",
+   "acciuga sott'olio",
+   "peperoncino",
+   "aglio",
+   "burrata",
+   "sale",
+   "pepe",
+   "scorza di limone",
+   "menta"
+  ],
+  "steps": [
+   "Rimuovi il gambo dal cavolo nero, fallo sbollentare 15-20 minuti in acqua salata",
+   "Tieni da parte l'acqua di cottura, riduci le foglie in crema aggiungendo olio evo,",
+   "In una padella rovente aggiungi olio evo, un'acciuga sott'olio, peperoncino e aglio",
+   "Dop oun paio di minuti aggiungi la crema di cavolo nero.",
+   "In una teglia metti le foglie piccole del cavolo nero, condisci con sale pepe e olio",
+   "Metti in forno 200°C per 10 minuti",
+   "Nell'acqua di cottura del cavolo, cuoci gli spaghetti",
+   "Condisci la burrata con olio, sale, pepe, scorza di limonea e menta",
+   "Salta gli spaghetti con la crema di cavolo",
+   "Impiatta e guarnisci con la burrata e le chips spezzettate"
+  ]
+ },
+ "Spaghetti con Patè di Olive": {
+  "ingredients": [
+   "50 g pomodorini",
+   "2 spicchi aglio",
+   "1 scalogno",
+   "2 cucchiai patè di olive",
+   "1 cucchiaio formaggio spalmabile",
+   "olio evo q.b."
+  ],
+  "steps": [
+   "Scaldare in una padella un filo d'olio, quindi aggiungere l'aglio e lasciar rosolare un paio di minuti.",
+   "Aggiungere lo scalogno tagliato a julienne e far imbiondire a fuoco medio.",
+   "Aggiungere i pomodorini tagliati a metà, lasciar cuocere per una decina di minuti.",
+   "Aggiungere il patè di olive e il formaggio spalmabile mescolare per amalgamare al sugo.",
+   "Aggiungere un mestolo di acqua di cottura della pasta per rendere il sugo più denso."
+  ]
+ },
+ "Risotto Cavolo Cappuccio e Caprino allo Zafferano": {
+  "ingredients": [
+   "180g riso carnaroli",
+   "cipolla rossa q.b.",
+   "mezzo bicchiere di vino bianco",
+   "10g burro",
+   "40g Grana o parmigiano",
+   "brodo al cavolo cappuccio e arancia q.b. per la cottura",
+   "sale q.b.",
+   "per il brodo al cavolo cappuccio",
+   "mezzo cavolo cappuccio",
+   "il succo di 1 arancia",
+   "1 L acqua",
+   "30 min di cottura",
+   "per la crema di caprino e zafferano",
+   "80g caprino",
+   "zafferano q.b.",
+   "acqua q.b."
+  ],
+  "steps": [
+   "Preparate il brodo facendo bollire il cavolo cappuccio con il succo di arancia e l’acqua per 30 minuti.",
+   "In una padella, soffriggete la cipolla rossa nel burro, poi aggiungete il riso Carnaroli e tostatelo leggermente.",
+   "Sfumate con il vino bianco e lasciate evaporare l’alcool.",
+   "Aggiungete il brodo di cavolo cappuccio e arancia poco alla volta, continuando a mescolare e cuocendo il riso.",
+   "A metà cottura, iniziate a preparare la crema di caprino e zafferano sciogliendo il caprino in acqua e aggiungendo lo zafferano.",
+   "Quando il riso è quasi cotto, incorporate la crema di caprino e zafferano.",
+   "Mantecate con il Grana Padano o Parmigiano e il burro rimanente."
+  ]
+ },
+ "Zuppa Delicata di Pesce e Patate": {
+  "ingredients": [
+   "200 g di merluzzo",
+   "400 g di patate",
+   "1 dado star verdure",
+   "1 cucchiaio di olio extravergine di oliva",
+   "1 manciata di prezzemolo fresco",
+   "1 pizzico di sale",
+   "1 pizzico di pepe"
+  ],
+  "steps": [
+   "Pelate le patate e tagliatele a tocchetti. Preparate il brodo con acqua e 1 dado star.",
+   "In una pentola capiente, soffriggete le patate con 1 cucchiaio di olio extravergine di oliva; aggiungete il brodo e lasciate cuocere.",
+   "Nel frattempo, preparate il merluzzo: tagliatelo a listarelle.",
+   "Quando saranno tenere, passate le patate aiutandovi con il frullatore a immersione.",
+   "Quindi, aggiungete alla zuppa il pesce e riprendete la cottura per altri 12 min. a pentola coperta.",
+   "A cottura ultimata, unite il prezzemolo tagliato fresco, una macinata di pepe, controllate il sale e servite la zuppa di pesce e patate ben calda."
+  ]
+ },
+ "Spaghetti alla Carbonara": {
+  "ingredients": [
+   "Spaghetti 320 g",
+   "Guanciale 150 g",
+   "Tuorli (di uova medie) 6",
+   "Pecorino romano 50 g",
+   "Pepe nero q.b."
+  ],
+  "steps": [
+   "Pestare il pepe nero in grani in un mortaio, o con un batticarne, quindi tostarlo per un minuto in una padella.",
+   "Mettere sul fuoco l'acqua per la pasta. Cuocere gli spaghetti al dente",
+   "Mentre si aspetta che bolla l'acqua e cuociano gli spaghetti, proseguire con la preparazione.",
+   "Eliminare la cotenna dal guanciale e tagliare prima a fette e poi a striscioline spesse circa 1cm.",
+   "Versate i pezzetti di guanciale in una padella e rosolate per circa 10 minuti a fiamma medio alta.",
+   "Versare i tuorli in una ciotola ampia, aggiungere il Pecorino e insaporire con il pepe nero. Amalgamare il tutto con una frusta a mano sino ad ottenere una crema liscia e densa.",
+   "Intanto il guanciale sarà giunto a cottura; spegnete il fuoco e utilizzando un mestolo prelevatelo dalla padella, conservate il fondo di cottura e versatene un mestolo o due nell'uovo, mescolando continuamente con la frusta. Trasferite il guanciale in una ciotolina e tenetelo da parte.",
+   "Prelevate una mestolata d’acqua della pasta e aggiungetela al composto di uova.",
+   "Scolate la pasta al dente.",
+   "Togliete dal fuoco e aggiungere una mestolata per volta di spaghetti alla ciotola con il composto di uova e pecorino. Dopo ogni mestolata mescolare bene e velocemente. Con questo metodo le uova prendono calore gradualmente, e si evita che si crei l'effetto \"frittata\", così le uova rimarranno cremose.",
+   "Aggiungete il guanciale, mescolate un'ultima volta e servite subito gli spaghetti alla carbonara aggiungendo ancora una spolverata di pecorino  e un pizzico di pepe nero."
+  ]
+ },
+ "Linguine con Scampi al Limone": {
+  "ingredients": [
+   "400 g gamberi o mazzancolle con gusci",
+   "3 spicchi d'aglio",
+   "60 ml olio evo",
+   "Sale q.b.",
+   "Pepe q.b.",
+   "200 g circa pomodorini datterini",
+   "1 scalogno",
+   "450 g tagliolini",
+   "Peperoncino essiccato",
+   "80 ml vino bianco",
+   "Succo di un limone",
+   "Buccia di un limone",
+   "50 g butter",
+   "8 g prezzemolo",
+   "Fettine di limone, a guarnire"
+  ],
+  "steps": [
+   "Pulire i gamberi, mettendo i gusci in un pentolino. Aggiungere acqua fino a coprire i gusci e far sobbollire 2-3 minuti.",
+   "Marinare i gamberi per 10 minuti con 2 spicchi d'aglio tritato, olio, sale e pepe.",
+   "Nel frattempo scaldare l'olio con il restante spicchio d'aglio a fettine e un cucchiaino di peperoncino.",
+   "Aggiungere lo scalogno a fette e i pomodori a spicchi, cuocere 3-4 minuti finché i pomodori si ammorbidiscono.",
+   "Aggiungi nella padella un filo d'olio, quindi il fumetto di gamberi, il succo e la scorza di limone e il burro.",
+   "Aggiungere la pasta una volta cotta, saltare qualche minuto e spolverare con il prezzemolo tritato grossolanamente.",
+   "Impiattare aggiungendo un filo d'olio a crudo e una fettina di limone."
+  ]
+ },
+ "Pesto di Acciughe": {
+  "ingredients": [
+   "5 filetti acciuga sott'olio",
+   "3 cuc. concentrato",
+   "1 ciuffo prezzemolo",
+   "30 g pinoli",
+   "1 peperoncino",
+   "1 spicchio aglio",
+   "Sale grosso q.b.",
+   "Olio EVO"
+  ],
+  "steps": [
+   "Pestare l’aglio nel mortaio con qualche grano di sale grosso.",
+   "Unire il prezzemolo, il peperoncino e i pinoli.",
+   "Pestare ancora, quindi aggiungere 3 acciughe e pestare finchè il composto risulta cremoso, aggiungendo olio se necessario.",
+   "Scaldare un filo d’olio in padella e aggiungere le acciughe rimaste.",
+   "Quando si saranno sciolte aggiungere il pesto e far prendere calore, quindi unire il concentrato sciolto in poca acqua.",
+   "Far cuocere circa 5 min."
+  ]
+ },
+ "Spaghetti con Tonno": {
+  "ingredients": [
+   "500 g passata di pomodoro",
+   "200 g tonno sott'olio sgocciolato",
+   "1/2 cipolla",
+   "1 spicchio aglio",
+   "q.b. peperoncino essiccato",
+   "2 cuc. olio",
+   "q.b. sale",
+   "200 g spaghetti"
+  ],
+  "steps": [
+   "Affettare finemente la cipolla, tagliare l'aglio scartandone l'anima.",
+   "Aggiungere in padella con l'olio e peperoncino a piacere.",
+   "Quando il soffritto è appassito aggiungere la passata, salare e lasciar cuocere circa 15 minuti.",
+   "Spegnere il fuoco e aggiungere il tonno, mescolando bene.",
+   "Saltare con gli spaghtti cotti  al dente."
+  ]
+ },
+ "Tagliolini con Sugo di Canocchie": {
+  "ingredients": [
+   "350 g Tagliolini",
+   "12 Canocchie",
+   "1 Scalogno",
+   "1 bicchiere Vino bianco",
+   "Peperoncino fresco q.b.",
+   "100 g Passata di pomodoro",
+   "100 g latte",
+   "Prezzemolo q.b.",
+   "½ bicchiere Olio extravergine d'oliva",
+   "Sale fino q.b."
+  ],
+  "steps": [
+   "Sciacquare molto bene le canocchie, conservare quindi le 4 più grosse ed tagliate a pezzetti le altre, lasciando le teste intere.",
+   "Tritate quindi lo scalogno e fatelo imbiondire in un tegame con l’olio a fuoco dolce insieme a qualche pezzettino di peperoncino.",
+   "Aggiungete poi le canocchie a pezzetti e quelle intere nello scalogno imbiondito e sfumate con il vino bianco,",
+   "poi, quando sarà evaporato, unite la passata di pomodoro.",
+   "Mescolate con delicatezza e dopo qualche minuto aggiungete il latte.",
+   "Fate addensare il sugo facendo attenzione a non rompere le canocchie intere.",
+   "In ultimo salate e aggiungete qualche foglia di prezzemolo.",
+   "Fate cuocere in abbondante acqua salata i tagliolini, scolateli e fateli saltare nel sugo di canocchie qualche istante.",
+   "Servite guarnendo ogni piatto con una canocchia intera e qualche foglia di prezzemolo."
+  ]
+ },
+ "Pollo Kung Pao": {
+  "ingredients": [
+   "Un petto di pollo",
+   "Un peperone rosso",
+   "2 cipolle ramate",
+   "Uno spicchio d'aglio",
+   "Un pollice di zenzero",
+   "Peperoncino secco qb",
+   "Abbondante olio di semi",
+   "3 cucchiai soia",
+   "1 cucchiaino bicarbonato",
+   "1 cucchiaino maizena",
+   "1 cucchiaio vino di riso",
+   "3 cucchiai soia",
+   "1 cucchiaio vino di riso",
+   "1 cucchiaio salsa hoisin",
+   "1 cucchiaio aceto nero",
+   "Mezzo bicchiere d'acqua"
+  ],
+  "steps": [
+   "Mariniamo il pollo con soia, vino di riso, bicarbonato e amido di mais per un'ora.",
+   "Tagliamo cipolle e peperoni e saltiamo con aglio, zenzero, olio e peperoncino. Devono restare croccanti.",
+   "Scottiamo il pollo in padella con olio di semi, deve rosolare fuori ma restare crudo dentro, quindi fiamma altissima.",
+   "Prepariamo la salsa mischiando tutti gli ingredienti.",
+   "Schiaffiamo tutto in padella e facciamo bollire 2/3 minuti. Chiudiamo con anacardi, olio di sesamo e un po' di chili crisps."
+  ]
+ },
+ "Pollo Marinato alla Soia e Cipollotto": {
+  "ingredients": [
+   "straccetti di pollo",
+   "salsa di soia",
+   "salsa di ostriche",
+   "miele",
+   "spezie a piacere",
+   "cipollotto",
+   "peperoncino",
+   "aglio",
+   "olio di sesamo"
+  ],
+  "steps": [
+   "riporre il pollo in una ciotola e spolverarlo con le spezie.",
+   "Irrorare con la salsa di soia, la salsa di ostriche e il miele.",
+   "Mescolare e lasciar marinare per almeno 30 minuti.",
+   "Tagliare a fette un cipollotto, separando la parte bianca dalla verde.",
+   "schiacciare gli spicchi d'aglio e affettare il peperoncino, se fresco, rimuovendo la placenta.",
+   "Irrorare una padella con l'olio di sesamo e farvi rosolare il peperoncino e l'aglio.",
+   "Aggiungere il pollo con la marinata e le parti bianche del cipollotto.",
+   "Far saltare per una decina di minuti, quindi aggiungere le parti verdi del cipollotto verso la fine della cottura.",
+   "Servire accompagnato con del riso al vapore."
+  ]
+ },
+ "Arrosto di Maiale alle Erbe": {
+  "ingredients": [
+   "lonza di maiale di 1,5-2 kg con la cotenna",
+   "2 cucni sale",
+   "3 rametti rosmarino",
+   "50 g zucchero semolato",
+   "500 g mele",
+   "Pepe q.b."
+  ],
+  "steps": [
+   "Preriscaldare il forno a 190°.",
+   "Mettere il maiale con la cotenna verso l’alto su una superficie di lavoro.",
+   "Con un coltello molto affilato, incidere la cotenna da un lato all’altro distanziandole di 1 cm, senza tagliare la carne.",
+   "Sfregare la superficie con sale e pepe, mettere la carne in una teglia insieme ai rametti di rosmarino.",
+   "Arrostire in forno per circa 2 ore (25 minuti per ogni 450g carne), bagnando la carne ogni tanto con i succhi di cottura. Se verso la fine la cotenna non è abbastanza croccante, aumentare la temperatura a 230° per 10 minuti.",
+   "Per preparare la salsa di mele, pelare e tagliare in 4 le mele, eliminando il torsolo.",
+   "Affettarle e metterle in una padella insieme allo zucchero e 2 cucchiai d’acqua.",
+   "Coprire, scaldare a fuoco basso e cuocere per 6-8 minuti, quindi frullarle.",
+   "Aggiustare di zucchero e mettere a raffreddare.",
+   "Trasferire la carne su un tagliere, coprirla con carta stagnola e lasciarla raffreddare."
+  ]
+ },
+ "Carne Macinata al Miso": {
+  "ingredients": [
+   "400 g macinato di maiale",
+   "40 g miso",
+   "3 cuc. zucchero",
+   "3 cuc. vino",
+   "3 cuc.ni zenzero grattuggiato",
+   "1 cuc. salsa di soia",
+   "1 cuc. salsa piccante cinese",
+   "2 cuc.ni olio di sesamo",
+   "200 mL acqua"
+  ],
+  "steps": [
+   "Mescolare la carne macinata, lo zenzero e il vino e cuocerli in una padella oleata spezzettando la carne con una spatola.",
+   "Quando la carne è cotta, aggiungere il miso, lo zucchero, la salsa di soia e la salsa piccante.",
+   "Mescolare tutto e saltare per qualche minuto.",
+   "Versare l'acqua nella padella e lasciar cuocere a fuoco basso fino a che l'acqua sarà evaporata quasi del tutto.",
+   "Alla fine della cottura aggiungere un filo di olio di sesamo e mescolare bene."
+  ]
+ },
+ "Costine alla Senape": {
+  "ingredients": [
+   "1 kg costine di maiale intere",
+   "4 cucchiai senape",
+   "1 cucchiaino paprika dolce",
+   "1 cucchiaino cumino",
+   "1 cucchiaio zucchero di canna",
+   "1 cucchiaio peperoncino tritato",
+   "sale q.b.",
+   "2 spicchi aglio"
+  ],
+  "steps": [
+   "In una ciotola, miscelare la senape con le spezie e gli spicchi d'aglio schiacciati.",
+   "Spalmare le costine con la miscela, avvolgere in pellicola e lasciare in frigo almeno 2 ore.",
+   "Cuocere in forno a 200° per 30 min",
+   "Sfornare, coprire la teglia con carta stagnola, forarla e cuocere per altri 90 min."
+  ]
+ },
+ "Costine con Salsa Barbecue": {
+  "ingredients": [
+   "1,4 kg costine",
+   "1 cucno zucchero di canna",
+   "1 cucno peperoncino",
+   "1 cucno paprika dolce",
+   "1 spicchio aglio",
+   "2 cucni senape",
+   "1 cucno cumino",
+   "1 cucno sale"
+  ],
+  "steps": [
+   "Mescolare le spezie in una ciotola, distribuirle bene con le mani sopra e sotto la carne.",
+   "Avvolgere nella pellicola e lasciar marinare almeno 2 ore.",
+   "Una volta tolta dal frigo, infornala in una leccarda.",
+   "Cuocere a 200° per 30 minuti.",
+   "Sfornare le costine e cospargerle con la salsa barbecue.",
+   "Rimetterle in forno per 5 minuti per glassare la salsa."
+  ]
+ },
+ "Filetto ai 4 Pepi": {
+  "ingredients": [
+   "600 g di filetto di maiale",
+   "20 g di pepe nero in grani",
+   "20 g di pepe bianco in grani",
+   "10 g di pepe verde",
+   "1 cucchiaino di pepe rosa",
+   "80 g di burro",
+   "1 bicchierino di brandy",
+   "1 spicchio di aglio",
+   "salvia",
+   "sale q.b."
+  ],
+  "steps": [
+   "Rigate il filetto per tutta la lunghezza con i rebbi di una forchetta.",
+   "Dividete lo spicchio di aglio e strofinatelo su tutta la superficie della carne.",
+   "Fatelo macerare 30 minuti nel brandy.",
+   "Frantumate i grani di pepe bianco e nero e lasciate interi i verdi e i rosa.",
+   "Fate sciogliere un po’ di burro in un tegame e lasciatelo intiepidire.",
+   "Salate il filetto, spennellatelo con il burro fuso e ruotate il filetto nel pepe.",
+   "Scaldate il burro rimasto in un tegame, rosolate la carne 10 minuti a fuoco medio girandolo spesso.",
+   "Abbassate la fiamma, unite il brandy con la salvia, flambate e coprite.",
+   "Cuocete altri 10 minuti.",
+   "Tagliate a fette spesse e irrorate con fondo di cottura."
+  ]
+ },
+ "Involtini di Cavolo": {
+  "ingredients": [
+   "10 foglie grandi di cavolo",
+   "400 gr di macinato misto",
+   "1 zucchina",
+   "1/2 cipolla",
+   "6 fette di pan carrè",
+   "1 bicchiere latte",
+   "80 gr di formaggio grattugiato",
+   "2 spicchi d’aglio",
+   "3 cucchiai di olio extravergine",
+   "burro q.b",
+   "dado da brodo q.b.",
+   "pepe misto in grani"
+  ],
+  "steps": [
+   "Mettere la mollica del pan carrè ad ammollare nel latte",
+   "Poi saltate in padella la carne con l'aglio tritato, la zucchina a dadini e la cipolla tritata.",
+   "Coprite con coperchio e lasciate cuocere per 15 -20 minuti.",
+   "Lasciate da parte a raffreddare.",
+   "Nel frattempo staccate le foglie di verza (non quelle troppo verdi e dure) dal cespo.",
+   "Mescolare tutti gli ingredienti del ripieno",
+   "Quando gli ingredienti sono tiepidi aprite una foglia di verza, aggiungete 1 cucchiaio abbondate di ripieno, richiudete creando un fagottino a pacchetto e sigillate con dello spago da cucina.",
+   "Far fondere il burro con un filo d'olio e un pezzetto di dado da brodo, quindi aggiungere gli involtini.",
+   "Aggiungete un filo d’olio in superficie, sale e pepe macinato",
+   "Cuocete per 15 minuti girandoli 1 sola volta."
+  ]
+ },
+ "Involtini di Pollo in Friggitrice ad Aria": {
+  "ingredients": [
+   "4 fettine di pollo sottili",
+   "Sale",
+   "Prosciutto cotto",
+   "Formaggio a fette",
+   "Pane grattugiato",
+   "Olio"
+  ],
+  "steps": [
+   "Posizionare le fettine di pollo sul piatto, aggiungere un po di sale, prosciutto cotto, formaggio e chiudere",
+   "Spennellare con dell'olio e passare al pane grattugiato",
+   "Cuocere 20 minuti friggitrice ad aria 180 gradi con un po' d'olio sopra"
+  ]
+ },
+ "Maiale al Vapore con Salsa alla Senape": {
+  "ingredients": [
+   "600 g lonza di maiale o culatello",
+   "3 cipolle",
+   "3 tuorli",
+   "4 cuc di olio di semi",
+   "1 cuc aceto",
+   "1 cucno karashi",
+   "1 cucno zucchero",
+   "½ cucno sale"
+  ],
+  "steps": [
+   "Cuocere la carne al vapore ponendola al centro del cestello e distribuendovi sopra e intorno le cipolle tagliate a fette.",
+   "Far cuocere per circa 1 ora, finché la carne non risulta tenera.",
+   "Nel frattempo preparare la salsa amalgamando la senape e l’aceto, unire lo zucchero, il sale, i tuorli e l’olio.",
+   "Miscelare bene con una frusta.",
+   "Quando la carne sarà cotta, lasciarla raffreddare leggermente, poi tagliarla a fette.",
+   "Porre le fette nei piatti e versarci sopra la salsa."
+  ]
+ },
+ "Polpette alla Mortadella": {
+  "ingredients": [
+   "250g mortadella",
+   "6 cuc pangrattato",
+   "6 cuc parmigiano",
+   "1 uovo",
+   "Noce moscata q.b.",
+   "2 cuc latte",
+   "Burro q.b.",
+   "1 spicchio d’aglio",
+   "Mezzo dado da brodo"
+  ],
+  "steps": [
+   "Impastare gli ingredienti delle polpette, l’impasto non deve risultare troppo bagnato.",
+   "Fondere una noce di burro in una padella con un pezzo di dado da brodo, uno spicchio d’aglio e 4-5 cuc acqua.",
+   "Infarinare le polpette e metterle in padella e cuocere, girare una volta che si è formata una crosticina."
+  ]
+ },
+ "Polpette di Ceci": {
+  "ingredients": [
+   "100 g ceci",
+   "1/2 cipolla",
+   "Sale q.b.",
+   "Pepe q.b.",
+   "Prezzemolo q.b.",
+   "Salvia q.b.",
+   "Olio q.b.",
+   "Limone"
+  ],
+  "steps": [
+   "Schiacciare i ceci con una forchetta, aggiungere la cipolla tritata, sale, pepe, olio, prezzemolo tritato, salvia spezzettata e un goccio di succo e la scorza di limone.",
+   "Infarinare e friggere in olio bollente."
+  ]
+ },
+ "Polpette di Tacchino con Zucchine": {
+  "ingredients": [
+   "500g di carne di tacchino tritata",
+   "2 zucchine grattugiate",
+   "1 uovo",
+   "1 cucchiaino di erbe aromatiche tritate (timo, rosmarino, salvia)",
+   "Sale e pepe q.b.",
+   "Olio d'oliva per la cottura"
+  ],
+  "steps": [
+   "In una ciotola, mescola la carne di tacchino tritata con le zucchine grattugiate, l'uovo, le erbe aromatiche tritate, il sale e il pepe.",
+   "Forma delle polpette della dimensione desiderata e mettile in una padella con un po' d'olio d'oliva caldo.",
+   "Cuoci le polpette a fuoco medio per circa 10-15 minuti, girandole di tanto in tanto, finché non saranno ben cotte.",
+   "Servi le polpette di tacchino con zucchine calde, accompagnate da un'insalata o da verdure grigliate."
+  ]
+ },
+ "Rotoli di Prosciutto Filanti": {
+  "ingredients": [
+   "100 g prosciutto cotto (arrosto)",
+   "500 g patate",
+   "100 g mozzarella (oppure provola)",
+   "20 g pecorino",
+   "20 g Parmigiano Reggiano DOP",
+   "1 uovo",
+   "q.b. prezzemolo",
+   "q.b. sale",
+   "q.b. pepe",
+   "q.b. pangrattato",
+   "q.b. olio extravergine d’oliva"
+  ],
+  "steps": [
+   "Prendiamo le patate e sbucciamole, laviamole e tagliamole in pezzetti, mettiamole in una pentola capiente in acqua fredda e salata e portiamo a bollore per 20 minuti, poi scoliamole e mettiamole in una ciotola.",
+   "Aggiungiamo sale, pepe, olio e schiacciamo per bene le patate fino a ridurle in purea.",
+   "Aggiungiamo i formaggi, prezzemolo tritato, olio, l’uovo e mescoliamo tutto insieme.",
+   "Stendiamo sulla spianatoia le fette di prosciutto cotto arrosto e mettiamo un po’ d’impasto alle patate sul lato corto della fetta, aggiungiamo mozzarella o provola tagliata in striscioline ed arrotoliamo.",
+   "Realizziamo tanti rotoli quanti ne occorreranno per terminare gli ingredienti.",
+   "Prendiamo una teglia ed oliamola, aggiungiamo del pan grattato e sistemiamo all’interno i rotoli di prosciutto cotto arrosto.",
+   "Inforniamo a 200° per 20 minuti circa poi sforniamo e serviamo filanti"
+  ]
+ },
+ "Bocconcini di Pollo alla Paprika": {
+  "ingredients": [
+   "6 fette di petto di pollo",
+   "130 g farina",
+   "30 g zucchero a velo",
+   "17 g sale",
+   "12 g pepe",
+   "5 g paprika",
+   "Olio per friggere"
+  ],
+  "steps": [
+   "Tagliare il pollo in bocconcini.",
+   "Scaldare l’olio finché arriva a 190°.",
+   "Mettere tutte le polveri in una busta ziplock, chiuderla e agitare bene per mescolare. Aggiungi nella busta anche il pollo e agita ancora.",
+   "Scrollare via la farina in eccesso e friggere il pollo per 5 minuti."
+  ]
+ },
+ "Involtini di Pollo e Prosciutto Crudo": {
+  "ingredients": [
+   "4 fette di petto di pollo",
+   "Prosciutto crudo q.b.",
+   "Rosmarino q.b.",
+   "Noce moscata q.b."
+  ],
+  "steps": [
+   "Battere il pollo fino ad appiattirlo.",
+   "Stendere le fette di prosciutto su un tagliere e adagiarvi sopra il pollo condito con la noce moscata e il rosmarino.",
+   "Arrotolare e fermare gli involtini con degli stuzzicadenti.",
+   "Ungere una padella antiaderente cuocerli per circa 20 minuti a fuoco moderato."
+  ]
+ },
+ "Petto d'Anatra Marinato": {
+  "ingredients": [
+   "2 petti d'anatra",
+   "1 bicchiere di birra",
+   "erbe aromatiche secche",
+   "bacche di ginepro",
+   "chiodi di garofano",
+   "sale",
+   "pepe",
+   "4 cipollotti",
+   "aceto balsamico",
+   "8/10 noci in gheriglio"
+  ],
+  "steps": [
+   "Eliminare dal petto gli eccessi di grasso conservando la pelle, e immergerlo nella birra con erbe, bacche di ginepro, chiodi di garofano, pepe in grani.",
+   "Lasciar marinare un'ora.",
+   "Tagliare il cipollotto dal lato lungo e scottarlo con un cucchiaio d'olio, acqua e un cucchiaio di aceto balsamico. Bagnare con acqua e aggiusta con pepe e sale, proseguendo la cottura finché l'acqua sarà evaporata completamente.",
+   "Scaldare la padella appena unta, e far abbrunire il petto dalla parte opposta alla pelle, per un paio di minuti, in modo che il grasso sciolto serva poi a insaporire anche l'altro lato. Bagnare con un cucchiaio di marinata, poi prelevare i petti e metterli in una piccola pirofila da forno versandovi sopra il resto della marinata. Sigillare con l'alluminio e infornare alla temperatura minima, finchè la carne raggiungerà i 60-70°C.",
+   "Tagliare i petti e disponi a ventaglio con i mezzi cipollotti, le noci tritate grossolanamente e due gocce di crema di aceto balsamico."
+  ]
+ },
+ "Pollo al Forno": {
+  "ingredients": [
+   "Pollo, 1",
+   "Sale grosso, 10 gr",
+   "Salvia, q.b.",
+   "Rosmarino, q.b.",
+   "Alloro, q.b.",
+   "Origano, q.b.",
+   "Olio extravergine di oliva, q.b.",
+   "Aglio, 2 spicchi",
+   "Patate q.b."
+  ],
+  "steps": [
+   "Tritate in un mixer 10 gr di sale grosso con un rametto di rosmarino, uno di origano, due spicchi d’aglio, quattro foglie di alloro e di salvia.",
+   "Tagliare le patate a fette spesse 1 dito e disporle nella pirofila in cui si cuocerà il pollo, irrorare di olio e porvi sopra il pollo intero.",
+   "Ricoprite il pollo col mix di erbe aromatiche e sale aiutandovi con le mani per essere sicuri che aderisca bene sulla pelle del pollo. Mettete il trito avanzato all’interno del pollo con una noce di burro.",
+   "Cospargete di olio il fondo della pirofila e aggiungetene un filo anche sul pollo. Infornate a 200° in forno statico preriscaldato, finché raggiunge una temperatura interna di 85°C.",
+   "Dopo trenta minuti, giratelo e con un cucchiaio versate un po’ di liquido di cottura su tutto il pollo affinché non si secchi troppo.",
+   "A piacere, irrorare anche di birra o vino dopo una mezz'ora dall'inizio della cottura."
+  ]
+ },
+ "Pollo Speziato al Forno": {
+  "ingredients": [
+   "200 g pollo",
+   "Latte q.b.",
+   "Aceto q.b.",
+   "Mezza cipolla",
+   "3 spicchi aglio",
+   "1 peperoncino",
+   "4 foglie alloro",
+   "2 cuc curcuma",
+   "1 cuc e mezzo cumino",
+   "1 cuc coriandolo",
+   "2 cucni curry",
+   "1 cucno noce moscata",
+   "1 pizzico cannella",
+   "Burro q.b."
+  ],
+  "steps": [
+   "Marinare per almeno 3 ore il pollo nel latte con qualche cucchiaio di aceto con la cipolla affettata, l’aglio a fettine, il peperoncino, l’alloro e le spezie.",
+   "Trascorsa qualche ora scolare il pollo, irrorarlo con olio e infornare a 180° per 1 ora.",
+   "A metà cottura girare le sovracosce e irrorarle con del burro fuso."
+  ]
+ },
+ "Polpette di Riso": {
+  "ingredients": [
+   "200 g riso per sushi cotto e condito",
+   "2 uova",
+   "1 bustina zafferano",
+   "q.b. prezzemolo tritato",
+   "20 g burro",
+   "q.b. parmigiano grattugiato",
+   "2 cuc. formaggio spalmabile",
+   "q.b. pangrattato",
+   "q.b. olio di semi"
+  ],
+  "steps": [
+   "Mischiare il riso con un uovo, mezza bustina di zafferano, prezzemolo tritato, il burro spezzettato, parmigiano grattugiato e formaggio spalmabile.",
+   "Impanare.",
+   "Friggere."
+  ]
+ },
+ "Tomino alla Milanese": {
+  "ingredients": [
+   "2 tomini",
+   "1 uovo",
+   "Pangrattato q.b.",
+   "Olio di semi"
+  ],
+  "steps": [
+   "Passare i tomini nell’uovo, poi nel pangrattato.",
+   "Far scaldare l’olio e quando sarà bollente friggere i tomini.",
+   "Quando saranno dorati scolarli, passarli nella carta assorbente e servire caldissimi."
+  ]
+ },
+ "Antipasto Impilato": {
+  "ingredients": [
+   "1/2 cetriolo",
+   "4 cucchiai formaggio spalmabile",
+   "1 trancio di salmone",
+   "olio di semi",
+   "sale",
+   "erba cipollina"
+  ],
+  "steps": [
+   "Scottare il salmone con un filo d’olio.",
+   "Nel frattempo pelare e tagliare il cetriolo a dadini. Metterli in un coppapasta e livellarli, coprirli con un paio di cucchiai di formaggio e con il salmone raffreddato e spezzettato.",
+   "Cospargere di erba cipollina tritata.",
+   "Far rassodare in frigo e servire freddo."
+  ]
+ },
+ "Tartare di Salmone con Avocado": {
+  "ingredients": [
+   "150 g salmone o tonno",
+   "1/2 avocado",
+   "2 gambi verdi di cipollotto",
+   "1 cuc maionese",
+   "1 cuc philadelphia",
+   "1 cucno aceto di riso",
+   "1 cucno salsa di soia",
+   "1 cucno pasta di peperoncino allo yuzu",
+   "q.b. olio di sesamo"
+  ],
+  "steps": [
+   "Tagliare il pesce e l’avocado a cubetti.",
+   "Tagliare a rondelle sottili i gambi di cipollotto.",
+   "Miscelare la maionese con il philadelphia e la pasta di peperoncino, quindi condire la crema ottenuta con la salsa di soia e l'aceto di riso.",
+   "Unire al composto ottenuto le verdure e il pesce tagliati, quindi condire con un filo di olio di sesamo."
+  ]
+ },
+ "Vol au Vent al Salmone": {
+  "ingredients": [
+   "q.b. pasta sfoglia",
+   "150 g di formaggio spalmabile",
+   "150 g di salmone affumicato",
+   "q.b. erba cipollina",
+   "2 cucchiai maionese",
+   "1 cucchiaio di latte",
+   "1 limone (scorza)",
+   "q.b. pepe bianco"
+  ],
+  "steps": [
+   "Stendere la pasta sfoglia, quindi con l'utilizzo di un coppa-pasta andiamo a ritagliare piccoli cerchietti di pasta. Alcuni cerchi vanno lasciati così come sono, mentre altri vanno incisi all'interno e scavati in modo che rimanga solo un dischetto. Il buco centrale nei dischetti di pasta serve infatti per andare a creare quella cavità che conterrà poi il ripieno.",
+   "Si procede dunque assemblando i vol au vent, ovvero impilando tutti i dischetti facendo attenzione di mettere quello intero alla base e quelli forati al centro sopra.",
+   "Con i ritagli di sfoglia avanzati si possono realizzare delle decorazioni da applicare in cima ai vol-au-vent.",
+   "Spennellando ogni dischetto con un po' di latte intero si può far sì che i vari strati di pasta si incollino l'un con l'altro.",
+   "Si passa infine alla cottura in forno, a 180° per circa 20 minuti.",
+   "Mentre i vol-au-vent si intiepidiscono, realizziamo la farcia sminuzzando il salmone e ponendolo nel bicchiere del mixer, unendovi il formaggio spalmabile, la maionese, il latte e il pepe.",
+   "Frulliamo per bene fino ad ottenere una crema omogenea.",
+   "Con l'uso di una tasca da pasticcere con bocchetta larga si possono riempire infine i vol-au-vent aggiugendo in superficie piccoli pezzettini di salmone e un po' di scorza di limone oltre che un paio di fili di erba cipollina."
+  ]
+ },
+ "Salmone e Maionese Piccante": {
+  "ingredients": [
+   "sesame furikake",
+   "smoked salmon",
+   "lemon",
+   "1 egg yolk",
+   "1 tablespoon mustard",
+   "neutral oil",
+   "Japanese chili pepper",
+   "salt"
+  ],
+  "steps": [
+   "Fai una maionese con il tuorlo, la senape, il peperoncino e il sale",
+   "taglia il salmone a pezzettini e mischialo con la salsa, aggiungendo il limone e il furikake"
+  ]
+ },
+ "Sauté di Gamberoni all'Aglio": {
+  "ingredients": [
+   "10 gamberoni con il guscio, da circa 30g l'uno",
+   "sale marino",
+   "pepe nero",
+   "3 cuc. abbondanti aglio schiacciato",
+   "olio evo",
+   "sakè",
+   "erba cipollina tritata"
+  ],
+  "steps": [
+   "Tagliare in due i gamberoni nel senso della lunghezza e privarli del filo intestinale. Condire con abbondante sale marino e pepe nero.",
+   "In una padella a fondo antiaderente scaldare bene l'olio con l'aglio grattugiato.",
+   "Unna volta che l'olio ha preso l'aroma dell'aglio, aggiungere i gamberi con il carapace verso il basso e alzare la fiamma.",
+   "Saltare i gamberi scuotendo bene la padella e poi, a metà cottura, girarli per rosolare bene anche la parte della polpa.",
+   "Completare con una spruzzata di sakè e dell'erba cipollina tritata."
+  ]
+ },
+ "Tonno Tataki": {
+  "ingredients": [
+   "TRANCI DI TONNO 300 gr",
+   "SALSA DI SOIA 5-6 cucchiai",
+   "ZENZERO FRESCO q.b.",
+   "ZUCCHERO 1/2 cucchiaino",
+   "ACETO di riso q.b.",
+   "SEMI DI SESAMO q.b.",
+   "OLIO D’OLIVA q.b.",
+   "AGLIO 1 spicchio",
+   "SENAPE q.b.",
+   "salsa unagi q.b.",
+   "gambo di cipollotto o erba cipollina q.b."
+  ],
+  "steps": [
+   "Marinare il tonno per 15 minuti, in una mistura di salsa di soia, zenzero grattuggiato, aglio schiacciato, zucchero e aceto di riso.",
+   "Tostare i semi di sesamo, riporli in un piatto e mescolarli con qualche goccia della marinatura del tonno.",
+   "Prelevare il tonno, spennellarlo con un sottile strato di senape e cospargerlo con i semi di sesamo tostati.",
+   "Cuocere su una piastra bollente per un minuto o due per lato, a seconda dello spessore.",
+   "Una volta che è cotto da tutti i lati, riporlo su un tagliere, affettarlo e servire guarnendo con gambo di cipollotto affettato, o erba cipollina tritata, e qualche goccia di salsa unagi."
+  ]
+ },
+ "Onigiri con Mousse di Tonno": {
+  "ingredients": [
+   "[RISO]",
+   "320 g riso",
+   "84 g aceto di riso condito",
+   "374 g acqua",
+   "[RIPIENO]",
+   "300 g tonno sott'olio sgocciolato",
+   "50 g philadelphia",
+   "2 cuc. maionese",
+   "1 cuc.no aceto di riso",
+   "1 cuc.no salsa di soia",
+   "[GUARNIZIONE]",
+   "2 fogli alga nori",
+   "2 cuc. semi di sesamo tostati",
+   "2 cuc. semi di papavero",
+   "2 cuc. uova di lompo",
+   "2 cuc. erba cipollina"
+  ],
+  "steps": [
+   "Preparare il riso seguendo la ricetta del riso per sushi.",
+   "Lasciar raffreddare completamente.",
+   "Nel frattempo preparare il ripieno: spezzettare il tonno e metterlo in una ciotola insieme al philadelphia.",
+   "Schiacciare e mescolare utilizzando una forchetta fino ad ottenere una crema omogenea, quindi aggiungere la maionese e gli altri ingredienti.",
+   "Stendere un pugno di riso su un pezzo quadrato di pellicola, quindi aggiungere un cucchiaio abbondante di crema di tonno.",
+   "Sollevare gli angoli della pellicola, in modo da far richiudere il riso sopra il ripieno.",
+   "Avvolgere la pellicola strettamente intorno alla palla di riso, dandovi forma con le mani, applicando un po' di pressione per fare in modo che il riso si attacchi.",
+   "Riporre in frigo per almeno 30 minuti.",
+   "Tagliare l'alga nori in strisce, la larghezza dipende dalle dimensione degli onigiri.",
+   "Rimuovere la pellicola dall'onigiri, avvolgerne la parte inferiore con una striscia di alga nori.",
+   "Spolverare con le guarnizioni desiderate.",
+   "Servire accompagnato da salsa di soia e wasabi."
+  ]
+ },
+ "Riso per Sushi": {
+  "ingredients": [
+   "160 g riso",
+   "42 g aceto di riso condito",
+   "187 g acqua"
+  ],
+  "steps": [
+   "Sciacquare il riso con acqua fredda fino a che l’acqua non risulta limpida.",
+   "Lasciare in ammollo in acqua fredda circa mezz’ora.",
+   "Mettere il riso e l’acqua in una pentola con fondo spesso e mettere sul fornello a fuoco alto.",
+   "Quando inizia a bollire leggermente, spegnere il fuoco, coprire la pentola con un canovaccio pulito, mettere il coperchio e rimettere su a fuoco bassissimo per 10 minuti.",
+   "Non alzare mai il coperchio.",
+   "Togliere dal fuoco e rovesciare nell’hangiri o sul tagliere di legno, aggiungere l’aceto e mescolare finchè è ancora caldo, mescolare e sventolare finchè arriva a temperatura ambiente."
+  ]
+ },
+ "Enoki Fritti": {
+  "ingredients": [
+   "funghi enoki",
+   "farina 00",
+   "farina di riso",
+   "zenzero",
+   "paprika",
+   "sale",
+   "olio di semi",
+   "alga nori"
+  ],
+  "steps": [
+   "Taglia l'estremità dei funghi, ricava delle striscione e srotola con alga nori (per chiuderla basterà dell'acqua)",
+   "Passa i funghi in un mix di farina 00, di riso, zenzero, paprika e sale",
+   "Friggi in olio di semi e servi con cipollotto fresco + la tua salsa preferita"
+  ]
+ },
+ "Rotoli di Sfoglia alla Pancetta con Tomino": {
+  "ingredients": [
+   "2 confezioni pasta foglia tonda",
+   "200 g pancetta a fette sottile",
+   "2 tomini",
+   "1 tuorlo"
+  ],
+  "steps": [
+   "Posizionare un coppa-pasta di acciaio al centro della prima sfoglia.",
+   "Tagliare la sfoglia a raggiera tutto intorno al coppa-pasta.",
+   "Posizionare una fettina di pancetta per ogni raggio.",
+   "Tagliare un foro delle dimensioni del coppa pasta sulla seconda sfoglia, adagiarla sopra l'altra e tagliare anche questa a raggiera.",
+   "Arrotolare i due raggi di pasta con all'interno la pancetta, lasciandoli attaccati all'estremità più vicina al coppa-pasta.",
+   "Spennellare con il tuorlo sbattuto mischiato con un po' di acqua.",
+   "Incidere la buccia dei tomini e metterli nel coppa-pasta.",
+   "Infornare in forno già caldo a 200° per circa mezz'ora, o fino a quando la sfoglia sarà leggermente dorata."
+  ]
+ },
+ "Tartare di Manzo": {
+  "ingredients": [
+   "500g filetto o scamone di manzo",
+   "qb olio, sale, pepe"
+  ],
+  "steps": [
+   "Tritare finemente al coltello la carne, condirla.",
+   "Impastarla a lungo con le mani, finché avrà una consistenza sfilacciata.",
+   "Porzionarla in 10 palline dello stesso peso, quindi impiattarla aiutandosi con un coppapasta.",
+   "Guarnire con un filo d'olio."
+  ]
+ },
+ "Salatini Speck e Brie": {
+  "ingredients": [
+   "Pasta sfoglia",
+   "Cipolla",
+   "Speck",
+   "Brie",
+   "Marmellata di arance",
+   "Rosmarino",
+   "Olio Q.b."
+  ],
+  "steps": [
+   "Affettare la cipolla e farla appassire in padella.",
+   "Tagliare la sfoglia a quadrati e porli in uno stampo da muffin, bucherellare il fondo con una forchetta",
+   "Farcire con un cucchiaio di cipolla, un pezzetto di brie, un cucchiaino di marmellata e una fetta di speck.",
+   "Aggiungere qualche foglia di rosmarino e un filo d'olio",
+   "Cuocere in forno a 180º per 20/25 minuti"
+  ]
+ },
+ "Waffle": {
+  "ingredients": [
+   "1 uovo",
+   "120 g di latte",
+   "4 g di lievito di birra fresco",
+   "50 g di zucchero semolato",
+   "1 cucchiaino di pasta di vaniglia",
+   "40 g di burro fuso",
+   "260 g di farina 00"
+  ],
+  "steps": [
+   "PROCEDIMENTO:",
+   "In una ciotola sbattiamo leggermente l'uovo insieme allo zucchero. Uniamo quindi il latte e il lievito, seguito dalla farina e subito dopo dal burro fuso e dalla vaniglia. Incorporiamo la farina con una spatola e lavoriamo poi l'impasto per 5 minuti (possiamo farlo a mano oppure anche in planetaria, munita di foglia). L'impasto risulterà molto morbido, quasi cremoso.",
+   "Copriamo la ciotola con un piatto o con pellicola e facciamo raddoppiare l'impasto per circa 2 ore. Una volta lievitato, poniamolo in frigo per 40 minuti (questo passaggio renderà l'impasto più facilmente lavorabile). Trascorso il tempo, trasferiamolo su una spianatoia leggermente infarinata e dividiamolo in 6 porzioni. Diamo a ciascuna porzione una forma sferica, quindi facciamo riposare le palline il tempo di preriscaldare la macchina dei waffle. Cuociamo ciascun disco, assicurandoci di appiattirlo leggermente una volta posizionato nella macchina per waffles, per circa 3-4 minuti o fino a doratura.",
+   "Serviamo immediatamente con sciroppo d'acero o la guarnizione che più amiamo."
+  ]
+ },
+ "Biscotti al Burro": {
+  "ingredients": [
+   "200 g burro",
+   "70 g zucchero",
+   "300 g farina 00",
+   "1 bustina di vanillina"
+  ],
+  "steps": [
+   "Mescolare il burro ammorbidito e la vanillina, aggiungendo una cucchiaiata di farina alla volta finché il composto non si appiccica più alle dita.",
+   "Formare una palla, coprirla di pellicola e tenerla in frigo per circa 30 minuti.",
+   "Dopo 30 minuti dividerla in palline di circa 3 cm di diametro, metterle su una placca da forno foderata di carta da forno, schiacciandole con la forchetta.",
+   "Cuocere per circa 15 minuti in forno preriscaldato a 180°.",
+   "Aspettare che siano raffreddati completamente prima di metterli in un barattolo."
+  ]
+ },
+ "Biscotti al Limone": {
+  "ingredients": [
+   "200 g farina 00",
+   "200 g zucchero",
+   "75 g burro",
+   "1 cuc.no lievito",
+   "1 uovo",
+   "3 limoni"
+  ],
+  "steps": [
+   "Prendere una ciotola e mettere la farina a fontana, al centro mettere il burro a pezzettini, lo zucchero, l’uovo, il lievito e la scorza dei limoni grattuggiata.",
+   "Impastare e formare una palla, avvolgerla con la pellicola e far riposare circa 30 minuti.",
+   "Dopodichè dividere l’impasto in piccole palline e schiacciarle leggermente.",
+   "Mettere i biscotti in una teglia foderata di carta di forno.",
+   "Cuocere in forno preriscaldato a 180° per 10 minuti circa.",
+   "Spolverizzare con zucchero a velo e servire."
+  ]
+ },
+ "Biscotti allo Zenzero": {
+  "ingredients": [
+   "200 g farina 00",
+   "10 g zenzero",
+   "300 g zucchero a velo",
+   "20 ml acqua",
+   "125 g burro"
+  ],
+  "steps": [
+   "Preriscaldare il forno a 180° e nel frattempo foderare due placche con la carta da forno.",
+   "Lavorare il burro con una frusta fino a ridurlo in crema.",
+   "Grattugiare lo zenzero fresco e tenerlo da parte.",
+   "Incorporare lo zucchero a velo e la farina poco per volta alla crema e iniziare a impastare con poca acqua tiepida.",
+   "Quando sarà diventata una pasta morbida unire lo zenzero grattugiato e impastare ancora qualche minuto.",
+   "Con un matterello stendere la pasta fino ad arrivare a un cm di spessore e ritagliare 30 dischetti del diametro di 3-4 cm usando un taglia pasta.",
+   "Mettere i biscotti sulla placca foderata e cuocere 10-15 minuti, finché la superficie sarà leggermente dorata."
+  ]
+ },
+ "Cheesecake Fredda al Limone": {
+  "ingredients": [
+   "150 g biscotti secchi",
+   "250 g philadelphia",
+   "40 g burro",
+   "180 g yogurt greco",
+   "50 g zucchero",
+   "Scorza di limone"
+  ],
+  "steps": [
+   "Frullare i biscotti, tenerne da parte 50 g e versare sul resto il burro fuso, e amalgamare.",
+   "Imburrare una tortiera a cerniera, soprattutto sui lati che vanno ricoperti con i biscotti tenuti da parte.",
+   "Coprire il fondo con i biscotti mescolati al burro e pressare con un cucchiaio.",
+   "Lasciar solidificare in frigo almeno mezz’ora.",
+   "Nel frattempo amalgamare il philadelphia, lo yogurt, lo zucchero e la scorza di limone nel mixer.",
+   "Versare il ripieno nella tortiera e tenere in frigo almeno 4 ore.",
+   "Prima di servire cospargere con altra scorza di limone e decorare a piacere"
+  ]
+ },
+ "Cookies": {
+  "ingredients": [
+   "125g farina 01",
+   "95g farina 00",
+   "1 ½ cucno sale",
+   "1 cucno bicarbonato",
+   "200g burro",
+   "220g zucchero di canna Moscovado",
+   "100g zucchero bianco",
+   "2 cucni estratto di vaniglia",
+   "1 uovo",
+   "1 tuorlo",
+   "90g pepite di cioccolato",
+   "130g cioccolato fondente in barretta"
+  ],
+  "steps": [
+   "Setacciare le farine insieme al bicarbonato in una terrina, unire il sale e mescolare.",
+   "Fondere il burro fatto a pezzi in un pentolino a fuoco medio. Far bollire mescolando continuamente finché non si separa e inizia a imbrunirsi.",
+   "Una volta che si è scurito uniformemente, versarlo in una tazza per fermare la cottura.",
+   "Mettere in frigo per 10 minuti.",
+   "Miscelare gli zuccheri in una ciotola grande e unire la vaniglia e il burro fuso. Amalgamare con una frusta elettrica per 1-2 minuti.",
+   "Aggiungere l’uovo e il tuorlo continuare con la frusta elettrica finché sono amalgamati.",
+   "Aggiungere la farina a cucchiaiate.",
+   "Una volta finita la farina unire delicatamente le gocce di cioccolato con un cucchiaio di legno.",
+   "Fare delle porzioni poco più grandi di una noce ben distanziate sulla teglia coperta di carta forno.",
+   "Far raffreddare in frigo per 1 ora.",
+   "Infornare 12-14 minuti in forno preriscaldato a 180°. Lasciar raffreddare almeno 2 minuti prima di trasferirli sulla griglia di raffreddamento per farli raffreddare del tutto."
+  ]
+ },
+ "Frosting al Philadelphia": {
+  "ingredients": [
+   "125 g burro",
+   "250 g philadelphia",
+   "250 g zucchero a velo"
+  ],
+  "steps": [
+   "Monta il burro a temperatura ambiente e aggiungi il philadelphia poco alla volta.",
+   "Incorporare lo zucchero a velo. Far riposare in frigo circa 1 ora."
+  ]
+ },
+ "Frosting alla Nutella": {
+  "ingredients": [
+   "250 g mascarpone o philadelphia",
+   "2 cuc. cacao amaro",
+   "3 cuc. Nutella",
+   "1-2 cuc. zucchero a velo"
+  ],
+  "steps": [
+   "Ammorbidire e montare con le fruste il mascarpone insieme allo zucchero.",
+   "Aggiungere il cacao amaro con le fruste in azione ed in seguito la nutella.",
+   "Amalgamare con le fruste fino ad ottenere un composto omogeneo."
+  ]
+ },
+ "Muffin": {
+  "ingredients": [
+   "150 g burro",
+   "150 g farina",
+   "150 g zucchero",
+   "3 uova",
+   "3 g lievito in polvere",
+   "1 pizzico sale"
+  ],
+  "steps": [
+   "Versare il burro ammorbidito in una ciotola con lo zucchero.",
+   "Montare il composto.",
+   "Unire un uovo alla volta continuando a lavorare con le fruste.",
+   "Aggiungere la farina e il lievito.",
+   "Mescolare con la spatola e riempire gli stampini con il composto.",
+   "Livellare la superficie e infornare a 180° per 25 minuti circa."
+  ]
+ },
+ "Muffin alla Menta con Gocce di Cioccolato": {
+  "ingredients": [
+   "110 g farina",
+   "30 ml sciroppo alla menta",
+   "70 g zucchero",
+   "1 uovo",
+   "30 g gocce di cioccolato",
+   "1 bustina di lievito",
+   "30 ml latte",
+   "30 g burro"
+  ],
+  "steps": [
+   "Unire in una ciotola il latte, lo sciroppo, le uova e il burro fuso",
+   "raffreddato, lavorare tutto con una frusta.",
+   "Aggiungere la farina, lo zucchero, il lievito e amalgamare.",
+   "Aggiungere le gocce di cioccolato e mescolare bene.",
+   "Versare negli stampini imburrati e infarinati, riempiendoli per 2/3.",
+   "Infornare a 180° preriscaldaato per 20 minuti.",
+   "Sfornare e lasciar raffreddare completamente."
+  ]
+ },
+ "Muffin alla Menta, Nutella e Cocco": {
+  "ingredients": [
+   "125 g yogurt",
+   "80 g latte",
+   "80 g zucchero",
+   "1 uovo",
+   "60 g burro",
+   "80 g farina di cocco",
+   "80 ml sciroppo di menta",
+   "250 g farina 00",
+   "1 bustina di lievito"
+  ],
+  "steps": [
+   "Mescolare lo yogurt, l’uovo, lo sciroppo, il latte e il burro fuso freddo.",
+   "In un’altra ciotola mescolare farina, zucchero, cocco e lievito.",
+   "Mescolare velocemente entrambe le miscele finché non si amalgamano.",
+   "Mettere l’impasto nei pirottini, infornare a 200° per 20-25 minuti."
+  ]
+ },
+ "Pancake": {
+  "ingredients": [
+   "25 g burro",
+   "125 g farina",
+   "2 uova",
+   "200 g latte",
+   "6 g lievito",
+   "15 g zucchero"
+  ],
+  "steps": [
+   "Fondere il burro e lasciarlo intiepidire.",
+   "Dividere gli albumi dai tuorli. Versare i tuorli in una ciotola e sbatterli con una frusta a mano, poi unirli al burro fuso a temperatura ambiente e il latte a filo, con la frusta.",
+   "Montare il composto finché non risulterà chiaro.",
+   "Unire il lievito alla farina e setacciare tutto nella ciotola con il compasto di uova, mescolare con la frusta per amalgamare.",
+   "Montare gli albumi con lo zucchero e incorporarli delicatamente al composto di uova.",
+   "Mettere a scaldare sul fuoco medio una padella ampia antiaderente e ungerla con poco burro.",
+   "Versa un mestolo di preparato e girarlo quando i bordi sono asciutti."
+  ]
+ },
+ "Pancake alla Banana": {
+  "ingredients": [
+   "1 banana molto matura",
+   "1 uovo",
+   "1 pizzico di cannella"
+  ],
+  "steps": [
+   "Affettare la banana a rondelle e schiacciarla con la forchetta.",
+   "Unire la cannella e l’uovo.",
+   "Continuare a lavorare con la forchetta fino ad ottenere un composto omogeneo.",
+   "Far scaldare una padella antiaderente con un po’ di burro e versarvi l’impasto a cucchiaiate.",
+   "Far cuocere a fiamma bassa e girali appena iniziano a comparire delle bollicine in superficie."
+  ]
+ },
+ "Tenerina al Cioccolato": {
+  "ingredients": [
+   "200 g cioccolato fondente",
+   "200 g burro",
+   "100 g zucchero",
+   "2 cuc fecola di patate",
+   "4 uova",
+   "Zucchero a velo"
+  ],
+  "steps": [
+   "Fondere a bagnomaria il cioccolato insieme a burro e zucchero.",
+   "Una volta che è sciolto, togliere dal fuoco e lasciar raffreddare.",
+   "In una ciotola sbattere le uova insieme alla fecola, aggiungere la crema di cioccolato e sbattere con le fruste elettriche.",
+   "Infornare a 180° per 30 minuti."
+  ]
+ },
+ "Torta alla Menta, Nutella e Cocco": {
+  "ingredients": [
+   "125 g yogurt",
+   "250 g farina 00",
+   "250 g farina di cocco",
+   "100 g zucchero",
+   "100 g sciroppo alla menta",
+   "2 uova",
+   "60 g burro",
+   "1 bustina vanillina",
+   "1 bustina lievito",
+   "Nutella q.b."
+  ],
+  "steps": [
+   "Sbattere le uova e lo zucchero fino a che sono montate, unire lo yogurt.",
+   "Aggiungere a filo il burro fuso a temperatura ambiente e lo sciroppo mescolando.",
+   "Unire la farina setacciata, il cocco, la vanillina, il lievito e uniformare mescolando.",
+   "Versare in uno stampo imburrato e mettere in forno preriscaldato a 180° per 40 minuti.",
+   "Sfornare e lasciar raffreddare almeno un paio di ore.",
+   "Sformare la torta e trasferirla in un piatto, coprirla di nutella e spolverizzare con la farina di cocco."
+  ]
+ },
+ "Torta alla Robiola": {
+  "ingredients": [
+   "200gr biscotti secchi",
+   "100gr burro",
+   "200gr robiola",
+   "150gr zucchetto",
+   "3 uova intere",
+   "3 cucchiai di farina",
+   "1 bustina di vanillina",
+   "500ml di panna per dolci"
+  ],
+  "steps": [
+   "trita biscotti e sciogli il burro a fuoco basso, unisci e disponi nel fondo della tortiera e lascia in frigo per 1h.",
+   "separare i rossi dagli albumi, amalgamare i rossi con lo zucchero aggiungere la robiola amalgamandola al resto e infine aggiungere la panna la vanillina e la farina continuando a mischiare.",
+   "montare gli albumi e unire al resto del composto.",
+   "versa il composto sopra alla base e inforna a 150 gradi forno statico per circa 1h e mezza.",
+   "se vedi che si brucia troppo sopra chiudila con la carta stagnola."
+  ]
+ },
+ "Torta Fredda allo Yogurt": {
+  "ingredients": [
+   "250 g biscotti secchi",
+   "10 g burro",
+   "350 g yogurt",
+   "50 g zucchero a velo",
+   "350 ml panna per dolci già",
+   "zuccherata",
+   "50 g zucchero"
+  ],
+  "steps": [
+   "Frullare i biscotti, versarvi il burro fuso, e amalgamare.",
+   "Imburrare una tortiera a cerniera, soprattutto sui lati che vanno ricoperti con i biscotti tenuti da parte.",
+   "Coprire il fondo con i biscotti mescolati al burro e pressare con un cucchiaio.",
+   "Lasciar solidificare in frigo almeno mezz’ora.",
+   "Montare la panna fredda di frigo.",
+   "Unire lo yogurt e lo zucchero a velo.",
+   "Mescolare delicatamente.",
+   "Versare la crema allo yogurt nella tortiera e tenere in frigo almeno 4 ore.",
+   "Appena prima di servire decorare a piacimento."
+  ]
+ },
+ "Torta Soffice alle More": {
+  "ingredients": [
+   "2 uova",
+   "1 pizzico di sale",
+   "180 g zucchero",
+   "1 bustina vaniglia",
+   "80 ml olio di semi",
+   "160 g yogurt bianco",
+   "200 g farina 00",
+   "50 g amido di mais",
+   "1 bustina di lievito",
+   "Latte q.b.",
+   "250 g more"
+  ],
+  "steps": [
+   "Preriscaldare il forno a 170°.",
+   "Sbattere le uova, il sale, lo zucchero e la vaniglia con le fruste elettriche fino ad ottenere un composto chiaro e spumoso.",
+   "Aggiungere l’olio e lo yogurt amalgamando bene.",
+   "Setacciare farina, lievito e amido, unirli al composto e mescolare.",
+   "Regolare la consistenza con il latte. Versare l’impasto nella teglia e cospargere la superficie con le more.",
+   "Infornare e cuocere 40 minuti."
+  ]
+ },
+ "Waffle Belgi": {
+  "ingredients": [
+   "110 g burro",
+   "140 g farina 00",
+   "1 pizzico sale",
+   "3 uova",
+   "1 bustina di vanillina",
+   "110 g zucchero",
+   "Zucchero a velo q.b."
+  ],
+  "steps": [
+   "Separare i tuorli dagli albumi e in una ciotola sbattere i tuorli con metà dello zucchero finché non saranno amalgamati.",
+   "Unire ai tuorli il burro fuso raffreddato.",
+   "Montare gli albumi con l’altra metà dello zucchero e incorporarli al composto di tuorli.",
+   "Aggiungere al composto anche la farina setacciata, il sale e la vanillina poco per volta.",
+   "Mettere il composto nella macchina per waffle già calda e imburrata, lasciar cuocere 5 minuti, finché il waffle sarà dorato.",
+   "Servire spolverando di zucchero a velo."
+  ]
+ },
+ "Mug Cake": {
+  "ingredients": [
+   "2 cucchiai di farina 00 (20 gr)",
+   "1 cucchiaio di zucchero (15 gr)",
+   "1 cucchiaio di cacao amaro in",
+   "polvere (12 gr)",
+   "1/2 cucchiaino di lievito in polvere",
+   "1 cucchiaio di olio vegetale (o",
+   "qualsiasi olio insapore)",
+   "3 cucchiai di latte",
+   "1 cucchiaio di Nutella"
+  ],
+  "steps": [
+   "In una tazza mettere la farina, lo zucchero, il cacao in polvere, il lievito, l'olio e il latte e mischiare bene.",
+   "Quando il composto è omogeneo e denso aggiungere una noce di nutella nel mezzo e farla affondare.",
+   "Cuocere in forno a microonde per 1 minuto."
+  ]
+ },
+ "Focaccia di Mauri": {
+  "ingredients": [
+   "500g manitoba",
+   "4g lievito in panetto (1g se secco)",
+   "1 cuc zucchero",
+   "10g sale",
+   "20g olio",
+   "300ml acqua",
+   "[salamoia]",
+   "olio evo",
+   "acqua"
+  ],
+  "steps": [
+   "Attivare il lievito con un po' d'acqua calda e lo zucchero",
+   "Nella planetaria mettere la farina, il lievito attivato e l'acqua rimanente.",
+   "Accendere la planetaria finché non si è formato un impasto omogeneo.",
+   "fermare la planetaria e aggiungere il sale e l'olio.",
+   "accendere la planetaria e impastare finché l'impasto non si è incordato.",
+   "prendere una ciotola larga e oliarla, rovesciarci l'impasto e piegarlo qualche volta per rinforzarlo.",
+   "Coprirlo con la pellicola e far lievitare 2h.",
+   "rovesciarlo in una teglia oliata o spolverata con semola.",
+   "sbucherellare l'impasto con le dita e far lievitare per un'altra ora.",
+   "sbucherellare di nuovo, aggiungere le olive e spalmare la superficie con la salamoia.",
+   "infornare a 200°c per circa 40 min."
+  ]
+ },
+ "Impasto per la Pizza": {
+  "ingredients": [
+   "500 g di farina 00 (o farina Manitoba)",
+   "7 g di lievito di birra fresco (o 3 g di lievito di birra disidratato)",
+   "10 g di olio extra vergine di oliva",
+   "350 ml di acqua minerale naturale in bottiglia a temperatura ambiente",
+   "8 g di sale"
+  ],
+  "steps": [
+   "se farina Barilla 00 usate solo 250 ml di acqua anziché 350 ml.",
+   "Mettiamo in una boule la farina setacciata e uniamovi il lievito di birra sbriciolato finemente quindi mescoliamo utilizzando un cucchiaio di legno.",
+   "Versiamo l'acqua in più riprese, continuando a mescolare in modo che venga assorbita dalla farina e il lievito si sciolga completamente.",
+   "Aggiungiamo il sale e versiamo l'olio extra vergine d'oliva sempre continuando a mescolare.",
+   "Questo tipo di impasto, mescolato in modo grezzo viene definito 'no knead'.",
+   "Copriamo la ciotola con un foglio di pellicola trasparente per alimenti e lasciamo lievitare per 30 minuti a temperatura ambiente.",
+   "L'ideale è metterlo in forno con la modalità 'forno spento' in modo da avere una temperatura costante di 26-28°.",
+   "Se non disponete di questa funzionalità potete avvolgere la ciotola in una coperta e lasciarla in un luogo riparato da correnti.",
+   "Trascorso questo tempo, trasferiamo l'impasto sul piano di lavoro e ripieghiamolo su se stesso ripetendo l'operazione sui 4 lati.",
+   "Poi per tre volte, richiudiamo l'impasto tirandolo con le mani verso di noi.",
+   "Non preoccupatevi se inizialmente la consistenza risulterà piuttosto appiccicosa (stendete un velo di farina sul piano per aiutarvi).",
+   "Rimettiamo il panetto nella boule, copriamo con la pellicola e lasciamo lievitare per altri 20 minuti.",
+   "Ripetiamo questo passaggio per altre due volte; l'ultima volta, prima di rimettere l'impasto nella boule, versiamovi un filo d'olio e infine lasciamo lievitare a temperatura ambiente per almeno 3 ore."
+  ]
+ },
+ "Piadina": {
+  "ingredients": [
+   "1kg farina",
+   "200g strutto",
+   "20g sale",
+   "300g acqua calda",
+   "100g latte",
+   "1 cucchiaio lievito"
+  ],
+  "steps": [
+   "Disporre la farina a vulcano su un piano di lavoro.",
+   "Spolverare il sale all'esterno della \"conca\".",
+   "Riscaldare il latte e l'acqua, e sciogliervi il lievito. Versare la mistura sulla farina, mescolando con una forchetta.",
+   "Aggiungere lo strutto finché il liquido è ancora caldo, in modo che si sciolga.",
+   "Impastare fino a formare una palla liscia e morbida, quindi tagliare l'impasto e stendere le piadine.",
+   "Cuocere su una piastra, girando la piadina solo dopo che si sono formate delle crosticine sul lato inferiore."
+  ]
+ },
+ "Panini per Burger": {
+  "ingredients": [
+   "450g di farina Manitoba",
+   "30g di burro ammorbidito",
+   "1 uovo",
+   "180ml di acqua calda",
+   "10g di lievito di birra in polvere",
+   "50g di zucchero",
+   "1 cucchiaino di sale"
+  ],
+  "steps": [
+   "Impastare tutti gli ingredienti dell'impasto e lavorarlo per circa 10 minuti fino a renderlo morbido e liscio.",
+   "Metterlo in una ciotola leggermente unta d'olio e coprirlo con un panno.",
+   "Lasciare lievitare per 1 o 2 ore, finché non raddoppia di volume.",
+   "Sgonfiare leggermente la pasta e tagliarla in 8 pezzi.",
+   "Formare con ciascuno di essi un disco di circa 2,5 cm di spessore e con un diametro di 8 cm.",
+   "Mettete i panini su una teglia leggermente unta d'olio, copriteli e lasciateli lievitare per un'altra ora, fino a quando non saranno ben gonfiati.",
+   "Accendere il forno a 190°C.",
+   "Spalmare i panini con un uovo sbattuto con un cucchiaino d'acqua, poi cospargere con semi di sesamo o di papavero.",
+   "Cuocere in forno preriscaldato fino a doratura, per circa 15 minuti."
+  ]
+ },
+ "Ciabatta": {
+  "ingredients": [
+   "farina (Manitoba): 500g",
+   "acqua : 400g",
+   "sale: 12g",
+   "olio: 2 cucchiai",
+   "lievito (fresco): 4g"
+  ],
+  "steps": [
+   "mescolare gli ingredienti in un contenitore e, una volta ben amalgamati, chiudere e lasciar riposare per un'ora a temperatura ambiente",
+   "trascorsa un'ora, fare un giro di pieghe direttamente nel contenitore e lasciar riposare un'altra ora",
+   "trascorsa un'altra ora, fare un altro giro di pieghe e lasciar riposare per 15 minuti",
+   "ribaltare l'impasto sul banco abbondantemente infarinato e spolverare abbondantemente anche la superficie superiore del composto",
+   "porzionare l'impasto scegliendo la pezzatura e la forma desiderate e lasciar riposare per 10 minuti",
+   "ribaltare le ciabatte su carta forno [intendo proprio che la parte che appoggia sul banco deve diventare quella superiore e viceversa; è un passaggio un po' rognoso, ma, una volta imparata la giusta tecnica, è velocissimo: il segreto è dare un bel colpo secco, senza esitazione] e aggiustarne un po' la forma",
+   "cuocere in forno preriscaldato a 250°C ventilato per 10 minuti con un pentolino d'acqua sul fondo, poi abbassare a 220°C ventilato per la fase di asciugatura, i cui tempi dipenderanno dalla pezzatura [per avere un'indicazione: le ciabatte più grandi, di solito, ci mettono 25 minuti]",
+   "lasciar raffreddare su una griglia"
+  ]
+ },
+ "Pita": {
+  "ingredients": [
+   "200 grammi Farina tipo 0",
+   "200 grammi Farina tipo 1",
+   "1 cucchiaino Miele",
+   "10 grammi Lievito di birra",
+   "1 cucchiaino Sale",
+   "2 cucchiai Olio extravergine d'oliva",
+   "230 grammi Acqua"
+  ],
+  "steps": [
+   "Crea un lievitino mettendo in una ciotola l’acqua, il miele, il lievito e tre cucchiai di farina dal totale.",
+   "Fai lievitare mezz’ora ed unisci poi tutti ingredienti restanti.",
+   "Lavora l’impasto per una decina di minuti o fino a che non avrai ottenuto un panetto liscio e molto morbido.",
+   "Ungi una ciotola con poco olio e fai a lievitare il panetto, coperto con la pellicola.",
+   "Lascialo per un'ora in forno con accanto una ciotolina di acqua bollente per creare una camera di lievitazione.",
+   "Trascorso il tempo della lievitazione dividi l’impasto in 8 pezzi dello stesso peso e forma delle palline portando tutti i lati al di sotto della pasta, richiudendole quindi come se fosse una palla sferica.",
+   "Fai finire la lievitazione ponendo gli otto panetti su un canovaccio cosparso di farina e coprendo con la pellicola, per circa un’ora.",
+   "Trascorsa l'ora della seconda lievitazione, schiaccia ogni pallina con la mano e passa su ognuna il matterello per ottenere dei dischi di 1 cm o 1,5 cm di spessore.",
+   "Fai riposare i dischi formati su una teglia, cosparsa di farina sempre coprendo con la pellicola per un'ulteriore ora.",
+   "Nel frattempo preriscalda il forno alla massima potenza e posiziona una teglia all'interno in modo che diventi rovente.",
+   "Cuoci la pita sulla teglia rovente mettendone non più di due alla volta.",
+   "Falle cuocere per due minuti e appena si gonfieranno girale e fai continuare la cottura per un altro paio di minuti.",
+   "Sforna e mantienile al caldo coprendole con un canovaccio."
+  ]
+ },
+ "Pane Arso": {
+  "ingredients": [
+   "250 g farina di grano arso",
+   "250 g farina 1",
+   "35 g pasta madre essiccata",
+   "300 g acqua",
+   "10 g sale"
+  ],
+  "steps": [
+   "Mescolare le farine e amalgamarle con il lievito con 250g dell’acqua totale.",
+   "Far riposare coperto per 30 minuti.",
+   "Unire il sale e l’acqua rimanente.",
+   "Far lievitare 2ore a temperatura ambiente, poi mettere l’impasto in frigo coperto con pellicola fino al mattino seguente.",
+   "Reimpastare un po’ e formare la pagnotta, far lievitare fuori frigo per circa 1 ora.",
+   "Infornare a 230° per 15 minuti e poi abbassare per i successivi 30 minuti a 200°."
+  ]
+ },
+ "Treccia ai Semi di Papavero": {
+  "ingredients": [
+   "230 g farina 1",
+   "175 ml acqua tiepida",
+   "100 g semi di papavero",
+   "1 tuorlo",
+   "15 g zucchero",
+   "10 g lievito di birra",
+   "10 g sale",
+   "2 cuc olio",
+   "1 cuc latte"
+  ],
+  "steps": [
+   "Formare una fontana con la farina setacciata, il sale, lo zucchero ed il lievito.",
+   "Versarvi l’acqua e l’olio.",
+   "Lavorare l’impasto formando una palla.",
+   "Aggiungere i semi di papavero tenendone da parte 2 cucchiai per decorare.",
+   "Amalgamare bene, fino a che l’impasto risulterà liscio ed elastico.",
+   "Mettere la palla in una ciotola unta con olio e coperta con un canovaccio in luogo caldo per un’ora.",
+   "Quando il volume sarà raddoppiato, dividerla in tre parti e ricavarne tre rotoli di circa 30cm.",
+   "Per la copertura, sbattere il tuorlo con il latte e un cucchiaio di zucchero, spennellarli sulla treccia e cospargere con semi di papavero.",
+   "Cuocere in forno caldo a 180° per circa 30 minuti."
+  ]
+ },
+ "Big Mac": {
+  "ingredients": [
+   "[PER LA SALSA]",
+   "100 g maionese",
+   "1 cucchiaino di cipolla in polvere",
+   "Mezzo spicchio d'aglio schiacciato e ridotto in pasta",
+   "2 cucchiaini di senape",
+   "1 cucchiaino di ketchup",
+   "1 cucchiaino di zucchero",
+   "Mezzo cucchiaino di paprika in polvere dolce",
+   "Una goccia di aceto di vino bianco",
+   "mezzo cucchiaino di aneto essiccato",
+   "1 pizzico di sale",
+   "1 pizzico di pepe macinato",
+   "3 fette di cetriolino sott'aceto tritate e ridotte in pasta",
+   "[PER LA CARNE]",
+   "500g carne tritata di manzo",
+   "1 cucchiaio sale",
+   "1 cucchiaino pepe macinato",
+   "1 cucchiaino zucchero di canna",
+   "1 cucchiaino aglio in polvere",
+   "2 cucchiaini dragoncello essiccato",
+   "[PER I PANINI]",
+   "4 fette di un formaggio a pasta morbida",
+   "Qualche foglia di lattuga, tagliata a striscioline",
+   "Mezza cipolla rossa, tritata finemente o tagliata a fettine sottilissime",
+   "3 o 4 fette di cetriolo sott'aceto per panino",
+   "Due panini per hamburger con semi di sesamo"
+  ],
+  "steps": [
+   "Amalgamare tutti gli ingredienti e lasciar riposare la salsa in frigo per almeno un'ora.",
+   "Impastare per qualche minuto la carne con tutte le spezie, fino ad ottenere un impasto abbastanza compatto. Formare gli hamburger e cuocerli su una piastra ben calda fino a raggiungere la cottura desiderata.",
+   "Tagliare i panini in 3 parti (io avevo del pane un po' scarso quindi ho fatto uno strato solo invece di due) e tostarli su una piastra fino a raggiungere una leggera doratura.",
+   "Spalmare la salsa speciale sulla prima fetta di pane, quindi aggiungere un po' di lattuga e il formaggio. Sulla fetta centrale spalmare ancora la salsa, aggiungere un altro po' di lattuga e qualche fetta di cetriolino. Aggiungere quindi gli hamburger su entrambe le fette, e sopra di essi la cipolla.",
+   "Assemblare il tutto coprendo con la parte superiore di panino, anch'essa tostata e spalmata di salsa"
+  ]
+ },
+ "Burger Vegetariano con Germogli": {
+  "ingredients": [
+   "1 cipolla rossa",
+   "Succo di limone q.b.",
+   "Olio q.b.",
+   "100 g carote",
+   "200 g fagioli rossi",
+   "1 peperoncino",
+   "350 g ceci",
+   "Tahina q.b.",
+   "Acqua q.b.",
+   "Sale q.b.",
+   "Pepe q.b.",
+   "Panini integrali",
+   "Lattuga q.b.",
+   "Pomodoro q.b.",
+   "Fontina q.b.",
+   "Cavolo nero"
+  ],
+  "steps": [
+   "Tritare grossolanamente la cipolla, bagnarla con 2 cucchiai di succo di limone.",
+   "Dopo 15 minuti soffriggerla in 2 cucchiai d’olio, unire le carote a julienne, salare e cuocere 3 minuti.",
+   "Aggiungere i fagioli schiacciati con la forchetta, lasciar insaporire 5 minuti, pepeare e aggiungere il peperoncino tritato.",
+   "Tritare nel mixer i ceci, tenerne da parte 4 cucchiai e unire al resto la tahina, 1 cucchiaio di succo di limone, sale e pepe.",
+   "Ridurre in crema, trasferirli in una ciotola, aggiungere i ceci tenuti da parte e il trito passato in padella.",
+   "Mescolare, regolare di sale e pepe, formare con le mani 4 hamburger compatti, ungendoli leggermente.",
+   "Cuocerli sulla piastra finché si forma una crosticina sulla superficie.",
+   "Mescolare 2 cucchiai di tahina con 2 cucchiai di llimone e 2 di acqua, sale e pepe.",
+   "Tagliare a metà i panini e tostarli. Quindi spalmare entrambe le metà con la salsa appena preparata.",
+   "Appoggiarvi sopra 1 foglia di lattuga, l’hamburger, 1 presa di germogli misti, 1 fetta di pomodoro, 1 fetta di fontina.",
+   "Completare con chips di cavolo nero: 8 foglie cotte a pezzi, in forno a 150° per 10 minuti, condite poi con un filo d’olio."
+  ]
+ },
+ "Panini Gusto Crispy in Padella": {
+  "ingredients": [
+   "370gr farina 00",
+   "370gr yogurt greco",
+   "2gr sale",
+   "10ml olio evo",
+   "6gr lievito istantaneo",
+   "2 cetriolini",
+   "60gr mayo light",
+   "90gr yogurt greco",
+   "1gr sale",
+   "Paprika dolce",
+   "Aglio in polvere",
+   "1 cucchiaino di Estratto carne o dado",
+   "30gr concentrato di pomodoro",
+   "20gr senape",
+   "400gr macinato magrissimo",
+   "150ml brodo di carne",
+   "1 cipolla bianca",
+   "150gr formaggio proteico light grattugiato"
+  ],
+  "steps": [
+   "Mischia gli ingredienti per la base con un cucchiaio (setaccia il lievito) e poi impasta a mano per 10 minuti fino a formare un panetto",
+   "Dopo un riposo coperto con pellicola di mezz'ora, dividi l'impasto in 8 palline, appiattisci con un mattarello infarinato deve risultare un cerchio sottile",
+   "Per la salsa taglia i cetriolini e mischia tutti gli ingredienti in una ciotola",
+   "Metti giusto un filo di olio in padella cuoci il macinato fuoco alto per fargli fare la crosticina",
+   "Aggiungi poi la cipolla tagliata e il brodo, cuoci a fuoco medio finché non si asciuga ma non deve diventare secco",
+   "A fiamma spenta aggiungi la salsa e mischia bene",
+   "Farcisci al centro i panini con la carne, aggiungi il formaggio e chiudi tutti i lati",
+   "Scalda una padella e cuoci a fuoco medio con coperchio i panini",
+   "Girali di tanto in tanto e quando sono belli cotti e dorati per fare diventare croccanti, alza la fiamma al massimo e dai una scaldata per circa 30 secondi stai attento a non bruciarli",
+   "Prima di toglierli dal fuoco dai una passata anche ai lati"
+  ]
+ },
+ "Toast all'Uovo": {
+  "ingredients": [
+   "2 fetta pane",
+   "2 cucchiai taleggio",
+   "1 uovo",
+   "1 foglia lattuga",
+   "1 fetta prosciutto crudo",
+   "Pepe q.b.",
+   "Senape q.b."
+  ],
+  "steps": [
+   "Cuocere l’uovo all’occhio di bue e nel frattempo tostare il pane, ponendo sulla fetta interiore il formaggio a pezzettini.",
+   "Quando l’uovo è cotto metterlo sul formaggio, spolverare di pepe e coprirlo con il prosciutto e la lattuga.",
+   "Spalmare un pochino di senape sulla seconda fetta di pane e completare il panino."
+  ]
+ },
+ "Cipolle in Agrodolce": {
+  "ingredients": [
+   "1kg di cipolle",
+   "400g di acqua",
+   "2 bicchieri di aceto bianco",
+   "90g di zucchero",
+   "22g di sale",
+   "Pepe in grani q.b.",
+   "Menta q.b.",
+   "Scorza di limone q.b.",
+   "Zenzero q.b."
+  ],
+  "steps": [
+   "Tagliare le cipolle a filetti.",
+   "Riscaldare acqua, aceto, zucchero e sale fino a quando non si saranno sciolti.",
+   "Condire le cipolle con il pepe, menta e limone. Versare sopra l'aceto e lasciar macerare fino a che non diventano fredde."
+  ]
+ },
+ "Contorno di Pomodori": {
+  "ingredients": [
+   "pomodori cuore di bue",
+   "1 barattolo/confezione di fagioli",
+   "1/4 di cipolla rossa",
+   "1/4 di aglio",
+   "rosmarino",
+   "olio",
+   "sale",
+   "pepe",
+   "ghiaccio/acqua fredda"
+  ],
+  "steps": [
+   "Scegliere dei pomodori cuore di bue abbastanza acerbi (duri e/o verdi)",
+   "Preparare la crema di fagioli",
+   "Assaggiare e regolare a seconda del proprio gusto",
+   "Cuocere i pomodori in una padella antiaderente (oppure anche in forno a 240 gradi per 10 minuti)",
+   "Girare i pomodori quando ben cotti da una parte",
+   "Per pulire la padella, buttarci sopra ancora calda del ghiaccio/acqua fredda"
+  ]
+ },
+ "Fagioli all'Uccelletto": {
+  "ingredients": [
+   "250 g fagioli cannellini",
+   "Olio q.b.",
+   "2 spicchi d'aglio",
+   "400 g passata di pomodoro",
+   "Sale e pepe",
+   "Q.b. rosmarino",
+   "Q.b. salvia"
+  ],
+  "steps": [
+   "Scaldare l’olio e aggiungere salvia, rosmarino e aglio.",
+   "Lasciar soffriggere per 1- 2 minuti, poi aggiungere i fagioli lessati.",
+   "Mescolare delicatamente e lasciar soffriggere un minuto.",
+   "Unire la passata, coprire e lasciar cuocere 20-25 minuti.",
+   "Se necessario, aggiungere un po’ d’acqua.",
+   "Spegnere il fuoco e regolare di sale e pepe."
+  ]
+ },
+ "Hummus di Ceci": {
+  "ingredients": [
+   "440 g ceci lessati",
+   "2 cuc succo di limone",
+   "4 cuc olio evo",
+   "2 spicchi aglio",
+   "1 cucno sale",
+   "6 cuc tahina",
+   "1 ciuffo prezzemolo",
+   "1 pizzico paprika"
+  ],
+  "steps": [
+   "Frullare tutto tranne il prezzemolo.",
+   "Guarnire con il prezzemolo e la paprika.",
+   "Far riposare in frigo almeno 15 minuti."
+  ]
+ },
+ "Insalata di Patate Giapponese": {
+  "ingredients": [
+   "4 patate",
+   "2 uova sode",
+   "2 fette di prosciutto",
+   "1/4 cetriolo",
+   "1/2 carota",
+   "1/2 cipolla",
+   "3 cucch.ino aceto di riso",
+   "1 cucch.ino dashi in polvere",
+   "6 cucch. maionese",
+   "1 cucch.ino semi di sesamo bianco",
+   "shichimi togarashi"
+  ],
+  "steps": [
+   "Sbucciare le patate, tagliarle a pezzettoni e farle bollire.",
+   "Scolare le patate e metterle in una ciotola, coprirle con il dashi e schiacciarle con una forchetta.",
+   "Aggiungere l’aceto di riso mentre sono ancora calde, per fare in modo che l’aceto venga assorbito bene, mescolare per un paio di minuti.",
+   "Lasciar raffreddare.",
+   "Bollire le uova.",
+   "Sbucciare e tagliare a cubetti carote e cetriolo.",
+   "Tritare finemente le cipolle.",
+   "Tritare grossolanamente le uova, tagliare a cubetti il prosciutto e mischiare tutto insieme alle patate, aggiungere il sale, la maionese e, facoltativo, shichimi togarashi.",
+   "Guarnire con semi di sesamo e far riposare l’insalata di patate in frigo fino al momento di servirla"
+  ]
+ },
+ "Patate Ripiene al Formaggio": {
+  "ingredients": [
+   "4 patate grandi con buccia sottile",
+   "200 g di Philadelphia",
+   "100g formaggio a pasta filata",
+   "100g grana o pecorino stagionato",
+   "Erba cipollina",
+   "sale aromatizzato all'aglio",
+   "pepe",
+   "Noce moscata"
+  ],
+  "steps": [
+   "Per prima cosa lavate accuratamente le patate e lessatele per una ventina di minuti fino a quando saranno cotte ma ancora al dente.",
+   "Ponetele sotto l'acqua fredda corrente per farle intiepidire, poi posizionatele in orizzontale e pelate soltanto la parte superiore.",
+   "Rimuovete, quindi, la calotta e scavatele delicatamente lasciando almeno 2 cm di bordo e tenendo da parte la polpa estratta.",
+   "Mescolatela ai formaggi grattuggiati.",
+   "Salate e pepate.",
+   "Aggiungete erba cipollina a piacere.",
+   "Sistemate i gusci di patate in una teglia rivestita di carta forno e riempitele generosamente di ripieno, compattandolo bene finché eccederà a cupoletta.",
+   "Cuocete in forno statico preriscaldato a 200°C per circa 20 minuti o comunque fino a doratura.",
+   "Sfornate le patate ripiene di verdure e formaggio e servitele subito."
+  ]
+ },
+ "Polenta Taragna": {
+  "ingredients": [
+   "2L acqua",
+   "sale",
+   "500 g di farina per polenta taragna",
+   "250 g di burro di montagna",
+   "250 g di formaggio morbido magro",
+   "250 g di formaggio morbido grasso"
+  ],
+  "steps": [
+   "Portate a bollore l’acqua, salate e versate a pioggia la farina mescolando energicamente con una frusta",
+   "quando il composto si sarà un poco addensato continuate la cottura a fuoco moderato mescolando continuamente con un mestolo di legno.",
+   "Quando saranno passati 45 minuti di cottura, aggiungete il burro e il formaggio che avrete nel frattempo tagliato a pezzetti.",
+   "Mescolate ancora per 20 minuti, lasciando che il formaggio venga incorporato e si amalgami in maniera omogenea."
+  ]
+ },
+ "Purè di Patate": {
+  "ingredients": [
+   "1 kg patate a pasta gialla",
+   "50 g grana grattuggiato",
+   "200 ml latte",
+   "50 g burro",
+   "Sale q.b.",
+   "Noce moscata q.b."
+  ],
+  "steps": [
+   "Lavare le patate e cuocerle fino a quando il centro risulterà morbido.",
+   "Scaldare il latte in un tegamino, togliere dal fuoco e coprire.",
+   "Scolare le patate, sbucciarle e passarle nello schiacciapatate.",
+   "In un tegame fondere il burro, unire le patate e girare per qualche minuto.",
+   "Sempre mescolando, aggiungere il latte caldo, la noce moscata e il grana grattuggiato."
+  ]
+ },
+ "Tuorli Marinati alla Soia": {
+  "ingredients": [
+   "170 ml salsa di soia",
+   "60 g aceto di riso",
+   "1 cucchiaino zenzero in polvere",
+   "1 cucchiaino Shichimi Togarashi",
+   "6 tuorli"
+  ],
+  "steps": [
+   "Mescolare la salsa di soia, l'aceto e le spezie quindi versare sui tuorli d'uovo in un contenitore resistente (cercare di coprire i tuorli il più possibile)",
+   "Mettere in frigo per 2-3 giorni",
+   "Dovrebbero avere una consistenza quasi gelatinosa dopo la marinatura",
+   "Rimuovere delicatamente con un cucchiaio e servire come si preferisce."
+  ]
+ },
+ "Giardiniera": {
+  "ingredients": [
+   "125 g di aceto di mele",
+   "125 g di acqua",
+   "10 g di sale",
+   "10 g di zucchero",
+   "2 bacche di anice stellato",
+   "4 semi di cardamomo",
+   "1 pezzetto di cannella in stecca",
+   "buccia di arancia e limone",
+   "pepe rosa"
+  ],
+  "steps": [
+   "Tagliate le verdure in pezzi trasferiamole in un contenitore, aggiungiamo sale, zucchero e irroriamo con l’aceto.",
+   "Portiamo a bollore l’acqua e versiamola direttamente sulle verdure per sciogliere sale e zucchero.",
+   "Aspettiamo che si raffreddi, chiudiamo e mettiamo a riposare in frigorifero per almeno 24 ore.",
+   "Più tempo resterà in infusione più i sapori si infonderanno nelle verdure."
+  ]
+ },
+ "Kentucky Mule": {
+  "ingredients": [
+   "2 parti Bourbon",
+   "1/2 parte succo lime",
+   "q.b. ghiaccio",
+   "q.b. ginger beer",
+   "1 rametto menta fresca"
+  ],
+  "steps": [
+   "Mettere nel bicchiere alcuni cubetti di ghiaccio, poi versare il Bourbon, la Ginger Beer ghiacciata e il succo di lime.",
+   "Mescolare delicatamente e guarnire con la menta."
+  ]
+ },
+ "Mon-tea-negro": {
+  "ingredients": [
+   "2 parti Amaro Montenegro",
+   "tè freddo q.b.",
+   "1 cucchiaio sciroppo di zucchero",
+   "1 cucchiaino succo lime",
+   "3 fettine zenzero",
+   "1 rametto menta",
+   "1 fetta lime",
+   "Ghiaccio q.b."
+  ],
+  "steps": [
+   "Riempire un bicchiere per 3/4 di ghiaccio.",
+   "Miscelare l'amaro, lo sciroppo e il succo di limone, quindi versarli nel bicchiere.",
+   "Riempire il bicchiere con il tè freddo, quindi guarnire con la menta, lo zenzero e la fettina di lime"
+  ]
+ },
+ "Montemule": {
+  "ingredients": [
+   "2 parti Amaro Montenegro",
+   "1 parte bourbon",
+   "1/2 parte succo lime",
+   "q.b. ghiaccio",
+   "q.b. ginger beer",
+   "1 rametto menta",
+   "1 fetta di lime"
+  ],
+  "steps": [
+   "Mettere nel bicchiere alcuni cubetti di ghiaccio, poi versare l’Amaro Montenegro, il Bourbon, la Ginger Beer ghiacciata e il succo di lime.",
+   "Mescolare delicatamente e guarnire con una fettina di lime e un rametto di menta."
+  ]
+ },
+ "Tè delle Feste": {
+  "ingredients": [
+   "4 L tè freddo alla pesca",
+   "600 mL vodka",
+   "2 lime",
+   "1/2 limone",
+   "q.b. sciroppo di zucchero di canna"
+  ],
+  "steps": [
+   "Miscelare il tè freddo e versarlo nel dispenser.",
+   "Aggiungere la vodka, regolando la dose in base alla percentuale alcolica che si vuole raggiungere, e miscelare.",
+   "A piacere, in caso la miscela risultasse amara, aggiungere lo sciroppo di zucchero di canna.",
+   "Tagliare gli agrumi e porli nel dispenser.",
+   "Lasciare in infusione per almeno un'ora per permettere agli agrumi di rilasciare il loro sapore."
+  ]
+ },
+ "Cocktail Rosa da Femmine": {
+  "ingredients": [
+   "5 cl di tequila",
+   "5 cl di succo di pompelmo fresco",
+   "top soda",
+   "1,5 cl di succo di lime fresco",
+   "1 cucchiaino di zucchero",
+   "1 spicchio di pompelmo o di lime"
+  ],
+  "steps": [
+   "Preparare un bordo salato inumidendo il bordo di un bicchiere highball con lo spicchio di lime o pompelmo, quindi immergerlo nel sale per ricoprirlo. Se non si desidera un bordo salato, si può iniziare con il passaggio successivo.",
+   "Aggiungere cubetti di ghiaccio allo shaker, quindi versare la tequila, il succo di pompelmo, il succo di lime e lo zucchero.",
+   "Agitare fino a quando non si è ben amalgamato e lo zucchero non si è sciolto.",
+   "Filtrare in un bicchiere highball sopra alcuni cubetti di ghiaccio, lasciando un po' di spazio in cima.",
+   "Ricoprire il cocktail con la club soda.",
+   "Guarnire con uno spicchio di pompelmo o lime."
+  ]
+ },
+ "Tisana all'Arancia": {
+  "ingredients": [
+   "1 tazza di acqua",
+   "1 fetta di arancia",
+   "1 cucchiaino di miele (opzionale)",
+   "1 cucchiaino di brandy (opzionale)",
+   "1 cucchiaino di cannella in polvere",
+   "1 pizzico di noce moscata in polvere"
+  ],
+  "steps": [
+   "In un pentolino, porta l'acqua a ebollizione.",
+   "Aggiungi la fetta di arancia, il miele (se lo stai usando) e il brandy (se lo stai usando).",
+   "Aggiungi la cannella e la noce moscata e mescola bene.",
+   "Lascia sobbollire a fuoco basso per circa 5 minuti, poi spegni il fuoco e lascia riposare per altri 5 minuti.",
+   "Filtra la tisana attraverso un colino per rimuovere la fetta di arancia e le spezie.",
+   "Servi caldo, magari con una fetta di arancia come decorazione."
+  ]
+ },
+ "Chili con Carne Super Extra Very Hot": {
+  "ingredients": [
+   "[Chili]",
+   "2 Cipolle rosse, tante, più sono, meglio è.",
+   "2 Peperoni dolci.",
+   "Peperoncini Scotch Bonnet o Habanero. da regolare in base alla tolleranza al piccante",
+   "4 cuc curcuma",
+   "1/2 cuc cumino",
+   "1 cuc carvi.",
+   "1/2 bicchiere di vino bianco",
+   "800 ml passata pomodoro",
+   "Sale q.b.",
+   "[Carne]",
+   "2 spicchi aglio",
+   "200 g Macinato fresco: 60% bovino 40% suino",
+   "1 cuc.no pepe",
+   "2 cuc.ni paprica dolce",
+   "1/4 bicchiere di vino bianco",
+   "[Opzionali]",
+   "Fagioli neri",
+   "Panna acida"
+  ],
+  "steps": [
+   "Anzitutto, cosa fondamentale, bisogna togliere i semi ai peperoncini, possibilmente senza togliere la placenta. Allo scopo è fondamentale usare dei guanti di plastica, magari indossando due paia uno sopra l'altro.",
+   "Peperoncini e peperoni vanno tagliati a strisce.",
+   "Far soffriggere le cipolle in olio di oliva in una pentola.",
+   "Appena cominciano a dorarsi, mettere il vino bianco.",
+   "Quando il vino comincia ad asciugarsi, aggiungere peperoni dolci e peperoncini.",
+   "Cominciare a mescolare aggiungendo man mano le spezie.",
+   "Se necessario aggiungere acqua.",
+   "Dopo circa 5 minuti, aggiungere la passata di pomodoro e prepararsi ad aggiungerne altra se vedete che il pomodoro si asciuga troppo.",
+   "Far cuocere a fuoco lento finché i peperoni dolci non sono morbidi.",
+   "In una padella far soffriggere l'aglio in olio d'oliva.",
+   "Appena si dora, si mette in padella il macinato.",
+   "Lo si fa rosolare ben bene mentre si aggiunge il pepe e la paprica.",
+   "Far sfumare con il vino bianco.",
+   "È importante far si che il macinato si cuocia 'spezzettato'.",
+   "Quando l'acqua della carne e il vino si sono asciugati, si spegne il fuoco.",
+   "Non appena i peperoni son pronti, si procede col matrimonio, ovvero l'unione della parte carne con la parte chili.",
+   "Ergo: versare nella pentola della parte chili, il macinato già pronto e, se volete, i fagioli.",
+   "Cuocere, mescolando in continuazione per 10/15 minuti.",
+   "Lasciar riposare per almeno 10 minuti.",
+   "In caso si volesse usare la panna acida per smorzare il piccante, va messa una volta che il chili con carne è stato impiattato. Così come eventuali pezzi di piadina, di tortilla, di pane."
+  ]
+ },
+ "Fagioli Piccanti": {
+  "ingredients": [
+   "500 g fagioli borlotti lessati",
+   "500 ml passata",
+   "200 ml acqua",
+   "2 spicchi di aglio",
+   "1 cipolla bionda",
+   "Q.b. tabasco",
+   "1 cucchiaio peperoncino in fiocchi",
+   "1 cucchiaino salsa worcestershire",
+   "3 salsicce",
+   "1 cucchiaio rosmarino tritato",
+   "QB olio di oliva"
+  ],
+  "steps": [
+   "Eliminare il budello delle salsicce e tagliarle a tocchetti.",
+   "Farle rosolare in padella con dell'olio, l'aglio, la cipolla tritata, il rosmarino tritato e il peperoncino.",
+   "Una volta che il misto ha preso colore, aggiungere la passata, la worcestershire e il tabasco.",
+   "Fare insaporire per qualche minuto, quindi aggiungere l'acqua e i fagioli.",
+   "Lasciar cuocere a fiamma medio-bassa per circa un'ora, o finché l'acqua sarà evaporata.",
+   "Aggiustare di sale."
+  ]
+ },
+ "Frittata con Verza e Patate": {
+  "ingredients": [
+   "5 uova",
+   "175 g cavolo verza",
+   "160 g patate",
+   "Parmigiano Reggiano DOP (a piacere)",
+   "olio extravergine d'oliva",
+   "Erba cipollina",
+   "sale",
+   "pepe"
+  ],
+  "steps": [
+   "Lavate le foglie di verza e tagliatele a striscioline sottili.",
+   "Mettetele in una padella con un filo di olio extravergine, salatele e fatele cuocere per 10-15 minuti, finché non saranno appassite.",
+   "Pelate le patate e tagliatele a fettine o a cubetti.",
+   "Fatele rosolare in un’altra padella, con olio extravergine e un pizzico di sale. Quando saranno tenere (dopo circa 10 minuti, a seconda di come le avete tagliate), spegnete e mettetele su carta assorbente per eliminare l’olio in eccesso.",
+   "Lasciate intiepidire sia la verza che le patate.",
+   "Nel frattempo, rompete le uova in una ciotola, aggiungete sale, pepe e un po’ di parmigiano se vi piace. Sbattetele bene con una frusta a mano.",
+   "Unite verza e patate alle uova, e mescolate per far distribuire.",
+   "Prendete la vostra tortiera e rivestitela con carta da forno leggermente inumidita.",
+   "Versate all’interno il composto spolverare con erba cipollina e pepe, e mettete tutto in forno ventilato a 180°.",
+   "Fate cuocere la frittata per circa 20 minuti, o comunque finché sarà dorata in superficie.",
+   "Se non volete usare il forno, potete cuocerla nel modo tradizionale, in padella, con un filo di olio extravergine."
+  ]
+ },
+ "Riso Saltato con Cavolo Nero e Zenzero": {
+  "ingredients": [
+   "4 cipollotti, affettati sottilmente",
+   "3 spicchi d'aglio tritati",
+   "2 cucchiai di zenzero fresco affettato",
+   "120 g di pancetta di maiale, a cubetti",
+   "4 tazze di riso cotto e raffreddato",
+   "80 g di piselli congelati",
+   "1 piccolo mazzo di cavolo, spezzettato grossolanamente",
+   "salsa di soia a basso contenuto di sodio, a piacere",
+   "q.b. olio di sesamo",
+   "2 uova, sbattute",
+   "pepe nero appena macinato"
+  ],
+  "steps": [
+   "Mettere la pancetta in una padella antiaderente capiente, quando il grasso comincia a sciogliersi aggiungere le parti bianche del cipollotto, l'aglio, lo zenzero e un po' di olio di sesamo.",
+   "Soffriggere per 2 minuti, mescolando di tanto in tanto.",
+   "Saltare il riso. Aggiungere olio di sesamo e cuocere fiamma alta.",
+   "Lasciate cuocere il riso indisturbato per circa 2 minuti o fino a quando non diventa croccante sul fondo.  Mescolare bene e ripetere, lasciandolo cuocere per circa 1-2 minuti o finché non è croccante.",
+   "Aggiungere i piselli, la metà delle parti verdi riservate dei cipollotti e il cavolo, mescolando rapidamente il cavolo con il riso, una manciata alla volta, finché non è incorporato e comincia ad appassire.",
+   "Versare la salsa di soia, la salsa di ostriche e l'olio di sesamo in modo uniforme sul riso e mescolare.",
+   "Versare le uova sbattute sul riso e mescolare rapidamente per incorporarle.",
+   "Lasciate cuocere per altri 2-3 minuti mescolando spesso.",
+   "Condire con pepe nero e/o salsa di soia extra se necessario.",
+   "Togliere dal fuoco e servire immediatamente, guarnendo con le parti verdi dei cipollotti rimaste."
+  ]
+ },
+ "Shabu Shabu": {
+  "ingredients": [
+   "[KOMBU DASHI]",
+   "1,5 L acqua",
+   "10 cm alga Kombu",
+   "100 mL sake",
+   "1 cuc.no sale",
+   "[SALSA TARA]",
+   "100 mL salsa di soia",
+   "60 mL succo di limone",
+   "50 mL dashi",
+   "[INGREDIENTI]",
+   "400 g cavolo cinese",
+   "60 g porro",
+   "70 g carota",
+   "350 g carne wagyu tagliata sottile",
+   "20 g shiitake",
+   "45 g fungo orecchione"
+  ],
+  "steps": [
+   "Versare nel pentolino da fonduta l'acqua e la Kombu.",
+   "Lasciare in infusione fredda per 30 minuti, quindi portare a bollore a fiamma media e togliere la Kombu.",
+   "Tenere da parte 50 ml di brodo per la salsa, quindi aggiungere il sake e il sale.",
+   "Preparare la salsa mescolando il dashi tenuto da parte, il succo  di limone e la salsa di soia.",
+   "Immergere la carne e le verdure per qualche secondo, finché raggiungono la cottura desiderata, quindi intingerli nella salsa."
+  ]
+ },
+ "Risotto con Ossobuco": {
+  "ingredients": [
+   "4 ossibuchi di vitello (circa 1,2 kg)",
+   "300 g riso Carnaroli o Vialone nano",
+   "40 g midollo",
+   "30 g cipolla",
+   "brodo di carne",
+   "farina qb",
+   "burro qb",
+   "aglio",
+   "prezzemolo",
+   "zafferano",
+   "limone",
+   "vino bianco secco",
+   "Grana grattugiato",
+   "sale e pepe"
+  ],
+  "steps": [
+   "Procedimento",
+   "Tagliuzzate i bordi degli ossibuchi, in modo che non si arriccino in cottura; infarinateli abbondantemente, scrollateli e rosolateli in una padella con 30 g di burro e uno spicchio di aglio schiacciato con la buccia, che poi eliminerete.",
+   "Fateli insaporire per 3-4' su ciascun lato, poi bagnateli con mezzo bicchiere di vino, salate e pepate, coprite con un coperchio e fate cuocere per circa 1 ora e 10', bagnando ogni tanto la carne con un po' di brodo.",
+   "Tritate intanto un ciuffone di prezzemolo con mezzo spicchio di aglio pelato e la scorza di un intero limone (gremolata).",
+   "Iniziate a preparare il risotto circa 20 prima che la carne giunga a cottura: rosolate la cipolla tritata in una casseruola con il midollo sminuzzato; tostatevi il riso e sfumatelo con uno spruzzo di vino bianco.",
+   "Portate il risotto a cottura, in circa 16-18', aggiungendo circa 900 g di brodo, poco per volta, unendo negli ultimi minuti una bustina di zafferano sciolta in un mestolo di brodo.",
+   "Aggiungete la gremolata agli ossibuchi a fine cottura. Mantecate il risotto con una noce di burro e 30-40 g di grana grattugiato. Servite il risotto con gli ossibuchi, completando con il loro sughino di cottura."
+  ]
+ },
+ "Ricetta Chili Senza Carne": {
+  "ingredients": [
+   "2-3 cipolle o cipolle rosse tritate",
+   "2 spicchi d’aglio",
+   "1-2 carote a cubetti",
+   "1 peperone rosso (o anche giallo) a dadini",
+   "1 lattina di fagioli rossi (o mix di kidney, borlotti, neri)",
+   "1 lattina di mais dolce",
+   "400 g di pomodori pelati a pezzi",
+   "200-250 ml di passata di pomodoro",
+   "2 cucchiai di concentrato di pomodoro",
+   "1 cucchiaino di paprika dolce, ½ cucchiaino di paprika affumicata",
+   "1 cucchiaino di cumino in polvere"
+  ],
+  "steps": [
+   "Soffritto: Scaldare l’olio in una casseruola capiente, aggiungere cipolla e aglio tritati e farli rosolare fino a renderli traslucidi.",
+   "Verdure: Unire carote e peperoni, cuocere 3-4 minuti per ammorbidire leggermente.",
+   "Spezie e concentrato: Aggiungere il concentrato di pomodoro, paprika e cumino, mescolando bene per insaporire le verdure.",
+   "Legumi e pomodoro: Versare i pomodori pelati, la passata, i fagioli e il mais. Mescolare e aggiungere il brodo vegetale.",
+   "Cottura: Coprire e lasciare sobbollire a fuoco medio-basso per 20-25 minuti, mescolando di tanto in tanto. Per una consistenza più cremosa, schiacciare una parte dei fagioli durante la cottura.",
+   "Guarnizione e servizio: A fine cottura, aggiungere coriandolo o prezzemolo fresco tritato. Servire caldo con riso integrale, tortillas, nachos o pane tostato"
+  ]
+ },
+ "Guacamole": {
+  "ingredients": [
+   "1 avocado",
+   "1 lime",
+   "2 pomodori",
+   "mezza cipolla",
+   "1 spicchio d'aglio",
+   "1 cucchiaino pepe",
+   "1 cucchiaino peperoncino",
+   "aceto di mele q.b.",
+   "sale q.b.",
+   "olio q.b.",
+   "salsa worchestershire q.b."
+  ],
+  "steps": [
+   "Schiacciare l’avocado con una forchetta, coprirlo con il succo di lime e mescolare.",
+   "Tritare finemente la cipolla e metterla a macerare coperta di aceto.",
+   "Tagliare i pomodori a cubetti, eliminarne i semi e unirli all’avocado.",
+   "Aggiungere un filo d’olio, sale, abbondante pepe, peperoncino, salsa worchestershire, tabasco, e l'aglio schiacciato.",
+   "Scolare la cipolla dall'aceto e aggiungerla alla guacamole.",
+   "Mescolare bene e far riposare in frigo almeno 15 min"
+  ]
+ },
+ "Burro alle Erbe": {
+  "ingredients": [
+   "200 g di burro morbido",
+   "1 cucchiaio colmo di erbette miste tritate (usato rosmarino, prezzemolo, timo, timo al limone e salvia)",
+   "1 cucchiaio di erba cipollina tritata",
+   "1 cucchiaino colmo di senape",
+   "½ cucchiaino di aglio in polvere",
+   "½ cucchiaino di sale fino"
+  ],
+  "steps": [
+   "Per preparare i burro alle erbe lavorate il burro con le frusto per renderlo cremoso, aggiungete quindi erbette tritate, erba cipollina, senape, aglio, sale. Amalgamate bene il tutto e trasferite il composto in una sacca da pasticcere.",
+   "Su della carta da frigo realizzate quindi tanti piccoli ciuffi di burro o, in alternativa, mettete il burro su della pellicola, avvolgetelo e formate un salsicciotto, richiudendo i lati come una caramella, affinché si compatti bene.",
+   "Nel primo caso avete delle monoporzioni già pronte e più scenografiche, nel secondo caso potete servire il burro tagliato a fette.",
+   "Mettete il burro alle erbe in frigo per un’oretta prima di servirlo"
+  ]
+ },
+ "Condimento al Limone": {
+  "ingredients": [
+   "250 ml Olio EVO",
+   "Scorza e succo di 1 limone",
+   "1 spicchio d'aglio schiacciato"
+  ],
+  "steps": [
+   "Sterilizzare un barattolo, quindi porre all'interno la scorza e il succo del limone.",
+   "Aggiungere uno spicchio d'aglio schiacciato, mescolare e in fine riempire il recipiente d'olio.",
+   "Lasciar riposare in frigo almeno 1 ora."
+  ]
+ },
+ "Crema di Feta e Piselli": {
+  "ingredients": [
+   "100g feta",
+   "100g piselli freschi/surgelati",
+   "10/20 foglie di menta (a seconda della dimensione)",
+   "Olio evo",
+   "Pepe"
+  ],
+  "steps": [
+   "Sbollentare i piselli o scongelarli in microonde se sono surgelati.",
+   "Versare tutti gli ingredienti nel bicchiere di un mixer e azionare fino ad ottenere una crema omogenea, aggiungendo olio al bisogno.",
+   "Spolverare di pepe."
+  ]
+ },
+ "Insalata Piccante di Tonno": {
+  "ingredients": [
+   "100g filetto di tonno, tagliato a fette di 10g ciascuna",
+   "1 cespo insalata indivia",
+   "2 cetrioli",
+   "1 cuc. salsa di chili all'aglio",
+   "2 cuc. olio di sesamo",
+   "1 pezzetto di daikon",
+   "[PONZU]",
+   "4 cuc. salsa di soia",
+   "8 cuc. aceto di riso",
+   "2 cuc. succo di limone",
+   "1 quadratino di konbu da 2 cm per lato"
+  ],
+  "steps": [
+   "mescolare tutti gli ingredienti per la ponzu in una ciotola, lasciar riposare tutta la notte",
+   "tagliare il filetto di tonno a fettine molto sottili",
+   "sminuzzare la parte interna dell'insalata e ridurre i cetrioli a cubetti",
+   "tagliare il daikon a striscioline molto sottili, arrotolarle intorno a una bacchetta di legno e immergere brevemente in acqua gelata, per formare dei riccioli.",
+   "Mettere il tonno in un recipiente con un cucchiaio di ponzu, la salsa chili all'aglio, e l'olio. Mescolare delicatamente.",
+   "formare un letto di insalata su un piatto da portata, con sopra i cubetti di cetriolo e porvi sopra il tonno marinato.",
+   "Decorare con i riccioli di daikon"
+  ]
+ },
+ "Maionese al Pepe Rosa": {
+  "ingredients": [
+   "4 cucchiai maionese",
+   "2 cucchiai olio aromatizzato",
+   "Scale quantities of all ingredients based on this ingredient",
+   "1 cucchiaino scorza di lime",
+   "1 cucchiaino pepe rosa",
+   "sale rosa q.b."
+  ],
+  "steps": [
+   "Amalgamare la maionese e l'olio",
+   "aggiungere la scorza di lime, il pepe e il sale."
+  ]
+ },
+ "Maionese Piccante per Sushi": {
+  "ingredients": [
+   "2 cucchiai maionese",
+   "1 cucchiaino di pasta di peperoncino allo yuzu",
+   "QB erba cipollina tritata"
+  ],
+  "steps": [
+   "Amalgamare gli ingredienti."
+  ]
+ },
+ "Salsa Agrodolce Cinese": {
+  "ingredients": [
+   "100 ml acqua",
+   "50 ml aceto di riso",
+   "40 g zucchero",
+   "2 cuc concentrato di pomodoro",
+   "1 cucno maizena",
+   "Sale q.b."
+  ],
+  "steps": [
+   "Far sciogliere la maizena nell’acqua, versare il liquido in un pentolino e aggiungere l’aceto, lo zucchero, il concentrato e un pizzico di sale.",
+   "Mescolare bene e mettere su a fuoco dolce.",
+   "Portare a ebollizione mescolando sempre, lasciar addensare finché non è fluida e viscosa.",
+   "Aggiustare di sale/zucchero.",
+   "Spegnere il fuoco e lasciar raffreddare mescolando di tanto in tanto."
+  ]
+ },
+ "Salsa al Miele": {
+  "ingredients": [
+   "2 spicchi aglio schiacciato",
+   "3-4 cucchiaini senape",
+   "1 cucchiaino paprika",
+   "1 pizzico zenzero",
+   "100 ml burro fuso",
+   "1 cucchiaino miele",
+   "5 cucchiaini maionese",
+   "sale qb",
+   "pepe qb",
+   "aceto di riso qb"
+  ],
+  "steps": [
+   "Frullare tutto insieme fino ad ottenere una crema omogenea"
+  ]
+ },
+ "Salsa alla Senape": {
+  "ingredients": [
+   "230 g maionese",
+   "30 g senape",
+   "15 g aceto",
+   "40 g miele",
+   "Sale q.b.",
+   "Pepe q.b.",
+   "1 spicchio aglio schiacciato"
+  ],
+  "steps": [
+   "Unire tutti gli ingredienti in una ciotola e sbattere con la frusta."
+  ]
+ },
+ "Salsa Barbecue": {
+  "ingredients": [
+   "1/2 cipolla",
+   "1 spicchio d’aglio",
+   "90 ml sciroppo acero",
+   "250 g ketchup",
+   "1 cucno paprika forte",
+   "2 cucni aceto di mele",
+   "2 cucni salsa worchestershire",
+   "1/2 cucno di pepe",
+   "1 pizzico sale",
+   "Olio q.b.",
+   "Zucchero di canna q.b.",
+   "2 cucni senape"
+  ],
+  "steps": [
+   "Soffriggere la cipolla e l’aglio tritati in un tegame con un po’ di olio.",
+   "Quando il trito è appassito, aggiungere lo zucchero di canna e mescolare.",
+   "Far caramellare qualche minuto poi aggiungere lo sciroppo, il ketchup, la paprika, l’aceto, la salsa worchestershire, la senape, il sale e il pepe.",
+   "Lasciar addensare la salsa mescolando di tanto in tanto con un cucchiaio."
+  ]
+ },
+ "Salsa per Arrosto alla Soia": {
+  "ingredients": [
+   "1 cuc. Aneto fresco",
+   "1 pezzetto di zenzero fresco a fettine",
+   "2 Fette di limone",
+   "100 g salsa di soia senza sale",
+   "Fondo di cottura arrosto",
+   "50 g Panna da cucina",
+   "1 cucchiaio Pepe rosa",
+   "100 g Birra",
+   "1 cucchiaino salsa Worcestershire"
+  ],
+  "steps": [
+   "mettere l'aneto, lo zenzero e il pepe in un sacchetto filtrante",
+   "versare la soia e la birra in un pentolino, aggiungendo il limone, la worchestershire e il sacchetto con le spezie.",
+   "far sobbollire a fuoco lento per la durata della cottura dell'arrosto, quindi aggiungervi il fondo di cottura.",
+   "amalgamare e lasciar cuocere un altro paio di minuti, quindi rimuovere il filtro e le fette di limone.",
+   "aggiungere la panna e lasciar addensare per cinque minuti, quindi togliere dal fuoco e servire."
+  ]
+ },
+ "Salsa per Pinzimonio": {
+  "ingredients": [
+   "Philadelphia",
+   "Yogurt greco",
+   "Prezzemolo",
+   "Olio",
+   "Succo di limone",
+   "Pepe bianco"
+  ],
+  "steps": [
+   "Tritare finemente il prezzemolo fresco.",
+   "Amalgamare tutti gli ingredienti in una ciotola"
+  ]
+ },
+ "Maionese Piccante": {
+  "ingredients": [
+   "1 tuorlo",
+   "1 cuc.no aceto di riso",
+   "100 ml olio vegetale",
+   "1 cuc.no sale marino",
+   "pepe bianco",
+   "1 cuc.no salsa chili all'aglio"
+  ],
+  "steps": [
+   "sbattere l'uovo in una ciotola. aggiungere l'aceto, l'olio a filo e sbattere con una frusta per ottenere la maionese.",
+   "quando inizia ad addensarsi, unire il sale e il pepe bianco.",
+   "unire la salsa chili ed emulsionare bene"
+  ]
+ },
+ "Salsa Tipo Droga": {
+  "ingredients": [
+   "Pomodori",
+   "Peperoni (friggitelli)",
+   "Peperoncino fresco a piacere",
+   "Cipolla",
+   "1 testa d'aglio"
+  ],
+  "steps": [
+   "Tagliare a metà i pomodori e i peperoni a pezzi",
+   "Porli in una teglia cospargendo di olio insieme al peperoncino a pezzetti",
+   "Tagliare la punta della testa d'aglio e cospargerlo d'olio e sale, quindi chiuderlo con carta alluminio e porlo con le verdure",
+   "Infornare a 180° per circa 40 minuti",
+   "Frullare le verdure aggiungendo l'aglio schiacciato e olio al bisogno, per rendere la salsa omogenea."
+  ]
+ },
+ "Senape al Miele": {
+  "ingredients": [
+   "150 g di senape",
+   "30 g di miele di acacia",
+   "15 g di zucchero semolato",
+   "1 cucchiaio e mezzo di acqua"
+  ],
+  "steps": [
+   "Per preparare la senape al miele, metti in un pentolino posto su fuoco basso 30 g di miele, 15 g di zucchero semolato e 1 cucchiaio e mezzo di acqua, quindi lascia scaldare il composto, mescolandolo spesso fino a quando l’acqua sarà completamente evaporata e lo zucchero sciolto e avrai ottenuto un liquido sciropposo.",
+   "A questo punto togli il pentolino dal fuoco e aggiungi 150 g di senape, quindi mescola bene il tutto fino a quando lo sciroppo sarà completamente amalgamato alla senape."
+  ]
+ },
+ "Miscuglio Piccantino": {
+  "ingredients": [
+   "2 cucchiai yogurt greco",
+   "1 cucchiaio Philadelphia",
+   "1 cucchiaio maionese",
+   "1 cucchiaino salsa piccante",
+   "3 peperoncini sottaceto tritati",
+   "2 cucchiai cipollotto verde a fettine sottili"
+  ],
+  "steps": [
+   "Miscugliare"
+  ]
+ },
+ "Hummus Piccante": {
+  "ingredients": [
+   "240 g ceci (in scatola, sgocciolati)",
+   "3 cucchiai salsa piccante (tipo droga slovena)",
+   "60 mL tahina",
+   "3 cucchiai succo di limone",
+   "1 cucchiaino aglio in polvere",
+   "1 pizzico sale",
+   "qb olio di sesamo",
+   "1 cucchiaio paprika"
+  ],
+  "steps": [
+   "Posizionare tutti gli ingredienti nel bicchiere del mixer",
+   "Frullare fino a ottenere un composto omogeneo, aggiungendo olio di sesamo per renderlo più liscio all'occorrenza",
+   "guarnire con paprika in polvere e semi di sesamo tostati"
+  ]
+ },
+ "Tonno Piccante (Alga Fuori)": {
+  "ingredients": [
+   "1 foglio di alga nori",
+   "100 g riso per sushi condito",
+   "80 g tonno rosso a listarelle",
+   "Maionese piccante qb",
+   "Erba cipollina tritata"
+  ],
+  "steps": [
+   "Stendere il foglio di alga nori sul piano di lavoro (o su un tappetino da sushi)",
+   "Distribuire uno strato sottile e uniforme di riso per sushi al centro dell'alga",
+   "Adagiare le listarelle di tonno rosso sopra il riso",
+   "Arrotolare stringendo bene: a differenza del solito uramaki, qui l'alga resta all'esterno del roll invece del riso",
+   "Tagliare in circa 6 pezzi con una lama bagnata, per evitare che il riso si attacchi",
+   "Ricoprire ogni pezzo con maionese piccante e finire con erba cipollina tritata"
+  ]
+ },
+ "Salmon Siren Roll": {
+  "ingredients": [
+   "1 foglio di alga nori",
+   "120 g riso per sushi condito",
+   "80 g salmone a tartare",
+   "Maionese piccante qb (per il salmone piccante interno)",
+   "1/2 avocado a fette",
+   "50 g salmone fresco a fette sottili (per la copertura)",
+   "Olio al peperoncino qb",
+   "Crunch d'aglio piccante (fried garlic crisp) qb"
+  ],
+  "steps": [
+   "Mescolare la tartare di salmone con maionese piccante per ottenere il ripieno di salmone piccante",
+   "Stendere il riso sull'alga nori e capovolgere: il riso va all'esterno del roll (uramaki)",
+   "Farcire con il salmone piccante e le fette di avocado, arrotolare stretto",
+   "Tagliare in circa 8 pezzi",
+   "Adagiare una fetta sottile di salmone fresco su ogni pezzo",
+   "Irrorare con un filo di olio al peperoncino e completare con il crunch d'aglio piccante"
+  ]
+ },
+ "Paint it Black Roll": {
+  "ingredients": [
+   "1 foglio di alga nori",
+   "120 g riso per sushi condito",
+   "100 g tonno a cubetti",
+   "Salsa di soia qb (per marinare)",
+   "1/2 avocado a fette",
+   "1 cipollotto tritato",
+   "Tobiko nero qb"
+  ],
+  "steps": [
+   "Marinare il tonno a cubetti nella salsa di soia per 10-15 minuti in frigorifero",
+   "Stendere il riso sull'alga nori e capovolgere: il riso va all'esterno del roll (uramaki)",
+   "Farcire con il tonno marinato sgocciolato, l'avocado e il cipollotto, arrotolare stretto",
+   "Tagliare in circa 8 pezzi",
+   "Passare ogni pezzo nel tobiko nero premendo leggermente, fino a ricoprire tutta la superficie esterna"
+  ]
+ },
+ "Wild Thoughts Roll": {
+  "ingredients": [
+   "1 foglio di alga nori",
+   "120 g riso per sushi condito",
+   "80 g tonno a tartare",
+   "Maionese piccante qb (per il tonno piccante interno, più un filo per condire)",
+   "1/2 avocado a fette",
+   "Cipolla fritta croccante qb",
+   "50 g salmone fresco a fette sottili (per la copertura)",
+   "Granella di tempura (tenkasu) qb"
+  ],
+  "steps": [
+   "Mescolare la tartare di tonno con maionese piccante per ottenere il ripieno di tonno piccante",
+   "Stendere il riso sull'alga nori e capovolgere: il riso va all'esterno del roll (uramaki)",
+   "Farcire con il tonno piccante, l'avocado e la cipolla fritta croccante, arrotolare stretto",
+   "Tagliare in circa 8 pezzi",
+   "Adagiare una fetta di salmone su ogni pezzo",
+   "Condire con un filo di maionese piccante e completare con la granella di tempura (tenkasu)"
+  ]
+ },
+ "Bruschetta al Lardo e Cappero": {
+  "ingredients": [
+   "4 fette di pane casereccio",
+   "2 cucchiai maionese",
+   "1 scalogno tritato finemente",
+   "8 fette sottili di lardo",
+   "Frutti di cappero a fette qb",
+   "Pepe macinato qb"
+  ],
+  "steps": [
+   "Tostare le fette di pane fino a doratura",
+   "Spalmare la maionese sul pane ancora caldo",
+   "Distribuire lo scalogno tritato",
+   "Coprire con le fette di lardo, che inizieranno leggermente a sciogliersi a contatto col pane caldo",
+   "Guarnire con i frutti di cappero a fette e una macinata di pepe"
+  ]
+ },
+ "Bruschetta al Tonno e Cipolline": {
+  "ingredients": [
+   "4 fette di pane casereccio",
+   "80 g tonno sott'olio sgocciolato",
+   "2 filetti di acciuga sminuzzati",
+   "2 cucchiai maionese",
+   "1 spicchio d'aglio (per la maionese all'aglio)",
+   "Cipolline sott'aceto a rondelle qb"
+  ],
+  "steps": [
+   "Tostare le fette di pane fino a doratura",
+   "Amalgamare la maionese con l'aglio grattugiato",
+   "Sminuzzare il tonno e le acciughe insieme fino a ottenere un composto omogeneo",
+   "Spalmare la maionese all'aglio sul pane, distribuire sopra il composto di tonno e acciughe",
+   "Guarnire con le cipolline sott'aceto a rondelle"
+  ]
+ },
+ "Bruschetta alla Bottarga e Uova di Lompo": {
+  "ingredients": [
+   "4 fette di pane casereccio",
+   "40 g burro salato",
+   "1 spicchio d'aglio (per la pasta d'aglio)",
+   "Uova di lompo rosse qb",
+   "Erba cipollina tritata qb",
+   "Bottarga grattugiata qb"
+  ],
+  "steps": [
+   "Tostare le fette di pane fino a doratura",
+   "Lasciare ammorbidire il burro a temperatura ambiente e amalgamarlo con la pasta d'aglio",
+   "Spalmare il burro all'aglio sul pane ancora caldo, in modo che si sciolga leggermente",
+   "Guarnire con le uova di lompo, l'erba cipollina tritata e una generosa spolverata di bottarga grattugiata"
+  ]
+ },
+ "Bruschetta alle Acciughe e Sardine": {
+  "ingredients": [
+   "4 fette di pane casereccio",
+   "40 g burro morbido",
+   "1 cucchiaio pasta di acciughe",
+   "6 pomodorini a cubetti",
+   "4 sardine sott'olio sgocciolate",
+   "Katsuobushi qb",
+   "Erba cipollina tritata qb"
+  ],
+  "steps": [
+   "Tostare le fette di pane fino a doratura",
+   "Amalgamare il burro morbido con la pasta di acciughe",
+   "Spalmare il burro alle acciughe sul pane",
+   "Distribuire sopra i pomodorini a cubetti e le sardine sgocciolate",
+   "Completare con una spolverata di katsuobushi e l'erba cipollina tritata"
+  ]
+ },
+ "Contorno Estivo": {
+  "ingredients": [
+   "300 g fagiolini",
+   "400 g patate",
+   "200 g ceci lessati (o in scatola, sciacquati)",
+   "2-3 cucchiai pesto",
+   "Semi di sesamo qb"
+  ],
+  "steps": [
+   "Lavare e spuntare i fagiolini",
+   "Lessare i fagiolini e le patate (pelate e tagliate a pezzi) in acqua salata per circa 10-12 minuti, fino a cottura",
+   "Scolare e lasciare intiepidire",
+   "Unire in una ciotola fagiolini, patate e ceci",
+   "Condire con il pesto e mescolare delicatamente",
+   "Completare con una spolverata di semi di sesamo"
+  ]
+ }
+};
 
 const CAT_ORDER = ["zuppe","primi","secondi","pesce","antipasti","piatti_unici","secondi","contorni","salse","pane","dolci","bevande"];
 const catLabels = {};
@@ -1363,9 +4711,12 @@ function render(){
     const card = document.createElement('div');
     card.className = 'card';
     card.innerHTML = `
-      <div class="card-head" style="background:var(--c-${r.cat}, var(--c-default))">
-        <div class="name"></div>
-        <div class="meta"><span class="catlabel"></span><span>·</span><span class="porz"></span><span>·</span><span class="tempo"></span></div>
+      <div class="card-head" style="background:var(--c-${r.cat}, var(--c-default))" role="button" tabindex="0" aria-label="Apri ricetta completa">
+        <div class="head-text">
+          <div class="name"></div>
+          <div class="meta"><span class="catlabel"></span><span>·</span><span class="porz"></span><span>·</span><span class="tempo"></span></div>
+        </div>
+        <div class="chevron">›</div>
       </div>
       <div class="card-body">
         ${r.fields.map(() => `
@@ -1392,6 +4743,11 @@ function render(){
         valueEl.textContent = f.value;
       }
     });
+    const head = card.querySelector('.card-head');
+    head.addEventListener('click', () => openModal(r));
+    head.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openModal(r); }
+    });
     grid.appendChild(card);
   });
 }
@@ -1401,6 +4757,76 @@ searchInput.addEventListener('input', e => {
   state.q = e.target.value;
   saveState();
   render();
+});
+
+// --- Modale ricetta completa ---
+const modalOverlay = document.getElementById('modalOverlay');
+const modalHead = document.getElementById('modalHead');
+const modalName = document.getElementById('modalName');
+const modalMeta = document.getElementById('modalMeta');
+const modalIngredients = document.getElementById('modalIngredients');
+const modalSteps = document.getElementById('modalSteps');
+const modalClose = document.getElementById('modalClose');
+let lastFocused = null;
+
+function openModal(r){
+  const full = (typeof FULL_RECIPES !== 'undefined') ? FULL_RECIPES[r.name] : null;
+
+  modalHead.style.background = `var(--c-${r.cat}, var(--c-default))`;
+  modalName.textContent = r.name;
+  modalMeta.innerHTML = '';
+  [r.catLabel, (r.porzioni === '—' ? '—' : r.porzioni + ' porz.'), r.tempo].forEach((t, i) => {
+    if (i > 0) modalMeta.appendChild(document.createTextNode('· '));
+    const span = document.createElement('span');
+    span.textContent = t;
+    modalMeta.appendChild(span);
+  });
+
+  modalIngredients.innerHTML = '';
+  modalSteps.innerHTML = '';
+
+  if (full && full.ingredients && full.ingredients.length) {
+    full.ingredients.forEach(ing => {
+      const li = document.createElement('li');
+      li.textContent = ing;
+      modalIngredients.appendChild(li);
+    });
+  } else {
+    const li = document.createElement('li');
+    li.textContent = 'Ingredienti non disponibili.';
+    modalIngredients.appendChild(li);
+  }
+
+  if (full && full.steps && full.steps.length) {
+    full.steps.forEach(step => {
+      const li = document.createElement('li');
+      li.textContent = step;
+      modalSteps.appendChild(li);
+    });
+  } else {
+    const li = document.createElement('li');
+    li.textContent = 'Procedimento non disponibile.';
+    modalSteps.appendChild(li);
+  }
+
+  lastFocused = document.activeElement;
+  modalOverlay.hidden = false;
+  document.body.classList.add('modal-open');
+  modalClose.focus();
+}
+
+function closeModal(){
+  modalOverlay.hidden = true;
+  document.body.classList.remove('modal-open');
+  if (lastFocused && lastFocused.focus) lastFocused.focus();
+}
+
+modalClose.addEventListener('click', closeModal);
+modalOverlay.addEventListener('click', e => {
+  if (e.target === modalOverlay) closeModal();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && !modalOverlay.hidden) closeModal();
 });
 
 buildChips();
